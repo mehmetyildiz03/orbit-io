@@ -23,22 +23,147 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Build static PWA
+      - name: Build V3.16.3 mobile camera lock
         run: |
           set -euo pipefail
           mkdir -p dist
-          cat pwa/site.part* | base64 --decode | gzip --decompress > dist/index.html
-          cp pwa/manifest.webmanifest dist/manifest.webmanifest
-          cp pwa/service-worker.js dist/service-worker.js
-          base64 --decode pwa/icon-180.png.b64 > dist/icon-180.png
-          base64 --decode pwa/icon-512.png.b64 > dist/icon-512.png
+          BASE=3b531ac690da62950005f5e61c2b74c7d79d7beb
+          for p in 00 01 02 03 04 05 06 07; do
+            git show "$BASE:pwa/site.part$p"
+          done | base64 --decode | gzip --decompress > dist/index.html
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('dist/index.html')
+          text=p.read_text(encoding='utf-8')
+          text=text.replace('V3.16.2','V3.16.3')
+          text=text.replace('MOBILE CAMERA FIX','MOBILE CAMERA LOCK')
+          text=text.replace('Mobile Camera Fix','Mobile Camera Lock')
+
+          old='''function currentViewportBox(){
+            const vv=window.visualViewport;
+            const w=vv&&Number.isFinite(vv.width)?vv.width:innerWidth;
+            const h=vv&&Number.isFinite(vv.height)?vv.height:innerHeight;
+            return{
+              width:Math.max(1,Math.round(w)),
+              height:Math.max(1,Math.round(h))
+            }
+          }'''
+          new='''function currentViewportBox(){
+            const vv=window.visualViewport;
+            const scale=vv&&Number.isFinite(vv.scale)?Math.max(1,vv.scale):1;
+            const w=vv&&Number.isFinite(vv.width)?vv.width*scale:innerWidth;
+            const h=vv&&Number.isFinite(vv.height)?vv.height*scale:innerHeight;
+            return{
+              width:Math.max(1,Math.round(w)),
+              height:Math.max(1,Math.round(h))
+            }
+          }'''
+          if old not in text:
+            raise SystemExit('viewport block not found')
+          text=text.replace(old,new,1)
+
+          touch="""const touchCapable=!!(
+            (typeof navigator!=='undefined'&&(navigator.maxTouchPoints||0)>0)||
+            (typeof window!=='undefined'&&'ontouchstart' in window)||
+            (typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches)
+          );"""
+          if touch not in text:
+            raise SystemExit('touch block not found')
+          text=text.replace(touch,touch+'''\n\nif(touchCapable){\n  for(const type of ['gesturestart','gesturechange','gestureend']){\n    document.addEventListener(type,e=>e.preventDefault(),{passive:false})\n  }\n  document.addEventListener('touchmove',e=>{\n    if(e.touches&&e.touches.length>1)e.preventDefault()\n  },{passive:false})\n}''',1)
+
+          text=text.replace('const initialCamZoom=touchCapable?.82:1.06;','const initialCamZoom=touchCapable?mobileCameraBaseZoom():1.06;',1)
+
+          pattern=re.compile(r'''function cameraTargetZoom\(\)\{.*?\n\}\nfunction camera\(dt\)\{.*?\n\n\}''',re.S)
+          m=pattern.search(text)
+          if not m:
+            raise SystemExit('camera block not found')
+          replacement='''function mobileCameraBaseZoom(){
+            return Math.min(W,H)<=430?.62:.68
+          }
+          function cameraTargetZoom(){
+            if(touchCapable){
+              const stableMass=Math.max(8,runStats.maxMass||8,mass(player));
+              const base=mobileCameraBaseZoom();
+              return clamp(
+                base-Math.max(0,stableMass-8)*.0018,
+                .50,
+                base
+              )
+            }
+
+            const visualMass=(player.blackHole||player.rebirth)
+              ?Math.max(mass(player),1+(player.bhFuel||0))
+              :mass(player);
+
+            return clamp(
+              1.08-Math.max(0,visualMass-8)*.0064,
+              .72,
+              1.08
+            )
+          }
+          function camera(dt){
+            const desiredZoom=cameraTargetZoom();
+
+            if(touchCapable){
+              cam.targetZoom=Math.min(cam.zoom,desiredZoom);
+              if(cam.targetZoom<cam.zoom){
+                cam.zoom+=(cam.targetZoom-cam.zoom)*Math.min(1,dt*2.6)
+              }
+            }else{
+              cam.targetZoom=desiredZoom;
+              cam.zoom+=(cam.targetZoom-cam.zoom)*Math.min(1,dt*2.15)
+            }
+
+            const viewW=W/cam.zoom;
+            const viewH=H/cam.zoom;
+            const tx=player.x-viewW/2;
+            const ty=player.y-viewH/2;
+
+            const followRate=touchCapable?10.5:4.6;
+            cam.x+=(tx-cam.x)*Math.min(1,dt*followRate);
+            cam.y+=(ty-cam.y)*Math.min(1,dt*followRate);
+
+            cam.x=clamp(cam.x,0,Math.max(0,WW-viewW));
+            cam.y=clamp(cam.y,0,Math.max(0,WH-viewH));
+
+          }'''
+          text=text[:m.start()]+replacement+text[m.end():]
+
+          checks=[
+            'V3.16.3',
+            'MOBILE CAMERA LOCK',
+            'Math.min(W,H)<=430?.62:.68',
+            'cam.targetZoom=Math.min(cam.zoom,desiredZoom);',
+            "['gesturestart','gesturechange','gestureend']",
+            'vv.width*scale',
+            'followRate=touchCapable?10.5:4.6'
+          ]
+          for token in checks:
+            if token not in text:
+              raise SystemExit('missing '+token)
+          if '.82-Math.max(0,visualMass-8)*.0046' in text:
+            raise SystemExit('old mobile zoom curve remains')
+
+          p.write_text(text,encoding='utf-8')
+          PY
+
+          git show "$BASE:pwa/manifest.webmanifest" > dist/manifest.webmanifest
+          git show "$BASE:pwa/service-worker.js" | sed 's/orbit-io-v3-16-2/orbit-io-v3-16-3/g' > dist/service-worker.js
+          git show "$BASE:pwa/icon-180.png.b64" | base64 --decode > dist/icon-180.png
+          git show "$BASE:pwa/icon-512.png.b64" | base64 --decode > dist/icon-512.png
           touch dist/.nojekyll
-          grep -q 'V3.16.2' dist/index.html
-          grep -q 'manifest.webmanifest' dist/index.html
-          grep -q 'apple-mobile-web-app-capable' dist/index.html
-          grep -q 'visualViewport' dist/index.html
-          grep -q 'touchCapable?.82:1.06' dist/index.html
+
+          grep -q 'V3.16.3' dist/index.html
+          grep -q 'cam.targetZoom=Math.min(cam.zoom,desiredZoom)' dist/index.html
+          grep -q 'vv.width\*scale' dist/index.html
+          grep -q 'gesturestart' dist/index.html
+          grep -q 'orbit-io-v3-16-3' dist/service-worker.js
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
