@@ -34,9 +34,11 @@ jobs:
           base64 --decode pwa/icon-180.png.b64 > dist/icon-180.png
           base64 --decode pwa/icon-512.png.b64 > dist/icon-512.png
           touch dist/.nojekyll
-          grep -q 'V3.16.1' dist/index.html
+          grep -q 'V3.16.2' dist/index.html
           grep -q 'manifest.webmanifest' dist/index.html
           grep -q 'apple-mobile-web-app-capable' dist/index.html
+          grep -q 'visualViewport' dist/index.html
+          grep -q 'touchCapable?.82:1.06' dist/index.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
