@@ -28,13 +28,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          cat pwa/site.part00 pwa/site.part01 pwa/site.part02 pwa/site.part03 pwa/site.part04 pwa/site.part05 pwa/site.part06 pwa/site.part07 | base64 --decode | gzip --decompress > dist/index.html
+          cat pwa/site.part* | base64 --decode | gzip --decompress > dist/index.html
           cp pwa/manifest.webmanifest dist/manifest.webmanifest
           cp pwa/service-worker.js dist/service-worker.js
           base64 --decode pwa/icon-180.png.b64 > dist/icon-180.png
           base64 --decode pwa/icon-512.png.b64 > dist/icon-512.png
           touch dist/.nojekyll
           grep -q 'V3.16.1' dist/index.html
+          grep -q 'manifest.webmanifest' dist/index.html
+          grep -q 'apple-mobile-web-app-capable' dist/index.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
