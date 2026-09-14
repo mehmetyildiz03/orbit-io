@@ -26,7 +26,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Build V3.16.3 mobile camera lock
+      - name: Build V3.16.4 relative mobile aim
         run: |
           set -euo pipefail
           mkdir -p dist
@@ -153,17 +153,22 @@ jobs:
           p.write_text(text,encoding='utf-8')
           PY
 
+          python3 pwa/mobile-aim-patch.py
+
           git show "$BASE:pwa/manifest.webmanifest" > dist/manifest.webmanifest
-          git show "$BASE:pwa/service-worker.js" | sed 's/orbit-io-v3-16-2/orbit-io-v3-16-3/g' > dist/service-worker.js
+          git show "$BASE:pwa/service-worker.js" | sed -E 's/orbit-io-v3-16-[0-9]+/orbit-io-v3-16-4/g' > dist/service-worker.js
           git show "$BASE:pwa/icon-180.png.b64" | base64 --decode > dist/icon-180.png
           git show "$BASE:pwa/icon-512.png.b64" | base64 --decode > dist/icon-512.png
           touch dist/.nojekyll
 
-          grep -q 'V3.16.3' dist/index.html
+          grep -q 'V3.16.4' dist/index.html
+          grep -q 'RELATIVE AIM STICK' dist/index.html
+          grep -q 'function updateRelativeMobileAim' dist/index.html
+          grep -q 'left:32%' dist/index.html
           grep -q 'cam.targetZoom=Math.min(cam.zoom,desiredZoom)' dist/index.html
           grep -q 'vv.width\*scale' dist/index.html
           grep -q 'gesturestart' dist/index.html
-          grep -q 'orbit-io-v3-16-3' dist/service-worker.js
+          grep -q 'orbit-io-v3-16-4' dist/service-worker.js
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
