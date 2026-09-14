@@ -1,5 +1,5 @@
 name: Deploy Orbit.io to GitHub Pages
-# V3.16.4 relative aim release
+# V3.16.5 full-screen mobile aim release
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Build V3.16.4 relative mobile aim
+      - name: Build V3.16.5 full-screen mobile aim
         run: |
           set -euo pipefail
           mkdir -p dist
@@ -157,19 +157,20 @@ jobs:
           python3 pwa/mobile-aim-patch.py
 
           git show "$BASE:pwa/manifest.webmanifest" > dist/manifest.webmanifest
-          git show "$BASE:pwa/service-worker.js" | sed -E 's/orbit-io-v3-16-[0-9]+/orbit-io-v3-16-4/g' > dist/service-worker.js
+          git show "$BASE:pwa/service-worker.js" | sed -E 's/orbit-io-v3-16-[0-9]+/orbit-io-v3-16-5/g' > dist/service-worker.js
           git show "$BASE:pwa/icon-180.png.b64" | base64 --decode > dist/icon-180.png
           git show "$BASE:pwa/icon-512.png.b64" | base64 --decode > dist/icon-512.png
           touch dist/.nojekyll
 
-          grep -q 'V3.16.4' dist/index.html
-          grep -q 'RELATIVE AIM STICK' dist/index.html
+          grep -q 'V3.16.5' dist/index.html
+          grep -q 'FULL-SCREEN AIM' dist/index.html
           grep -q 'function updateRelativeMobileAim' dist/index.html
-          grep -q 'left:32%' dist/index.html
+          grep -q '#mobileAimZone{position:absolute;left:0;right:0;top:0;bottom:0;z-index:0' dist/index.html
+          grep -q '#joyPad{position:absolute;z-index:2' dist/index.html
           grep -q 'cam.targetZoom=Math.min(cam.zoom,desiredZoom)' dist/index.html
           grep -q 'vv.width\*scale' dist/index.html
           grep -q 'gesturestart' dist/index.html
-          grep -q 'orbit-io-v3-16-4' dist/service-worker.js
+          grep -q 'orbit-io-v3-16-5' dist/service-worker.js
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
