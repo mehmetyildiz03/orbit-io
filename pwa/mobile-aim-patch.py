@@ -10,21 +10,35 @@ def replace_once(old, new, label):
         raise SystemExit(f'missing patch anchor: {label}')
     text = text.replace(old, new, 1)
 
-text = text.replace('V3.16.3', 'V3.16.4')
-text = text.replace('MOBILE CAMERA LOCK', 'RELATIVE AIM STICK')
+text = text.replace('V3.16.3', 'V3.16.5')
+text = text.replace('MOBILE CAMERA LOCK', 'FULL-SCREEN AIM')
 
 replace_once(
     '#mobileAimZone{position:absolute;left:38%;right:0;top:0;bottom:0;',
-    '#mobileAimZone{position:absolute;left:32%;right:0;top:0;bottom:0;',
-    'aim-zone-width',
+    '#mobileAimZone{position:absolute;left:0;right:0;top:0;bottom:0;z-index:0;',
+    'aim-zone-fullscreen',
+)
+replace_once(
+    '#joyPad{position:absolute;',
+    '#joyPad{position:absolute;z-index:2;',
+    'joy-over-aim',
+)
+replace_once(
+    '#bhTouch{position:absolute;',
+    '#bhTouch{position:absolute;z-index:2;',
+    'bh-over-aim',
 )
 text = text.replace(
     'SOL: HAREKET · SAĞ: NİŞAN/ATEŞ · 2 PARMAK: YÖRÜNGE · KAMERA OTOMATİK',
-    'SOL: HAREKET · SAĞ: SÜRÜKLE YÖN / BIRAK ATEŞ · 2 PARMAK: YÖRÜNGE',
+    'JOYSTICK: HAREKET · DİĞER HER YER: NİŞAN / BIRAK ATEŞ · 2 PARMAK: YÖRÜNGE',
 )
 text = text.replace(
     'Dokun-sürükle ile yön seç; bırakınca uyduyu fırlat.',
-    'Dokunduğun noktayı merkez kabul et; istediğin yöne kısa sürükle, bırakınca ateş et.',
+    'Joystick ve Black Hole düğmesi dışında ekranın herhangi bir yerine dokun; sürükle yön seçer, bırakınca ateş eder.',
+)
+text = text.replace(
+    'sağ tarafta dokun-sürükle-bırak ile ateş et',
+    'joystick dışındaki herhangi bir yerde dokun-sürükle-bırak ile ateş et',
 )
 
 replace_once(
