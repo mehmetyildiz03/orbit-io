@@ -12,7 +12,7 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
-<title>Orbit.io V3.16.10 — Responsive Mobile HUD</title>
+<title>Orbit.io V3.16.11 — Portrait Input Lock</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#050812;color:#eef6ff;font-family:Inter,system-ui,Segoe UI,Arial}
 :root{--app-width:100vw;--app-height:100dvh}
@@ -89,8 +89,11 @@ body.touch-mode #mobileControls.active{display:block;position:fixed;inset:0;z-in
 #bhTouchFill{position:absolute;left:0;bottom:0;top:0;width:0;background:linear-gradient(90deg,rgba(94,174,255,.13),rgba(156,224,255,.28));transition:width .06s linear;pointer-events:none}
 #bhTouchLabel{position:relative;z-index:1;display:flex;width:100%;height:100%;align-items:center;justify-content:center;text-align:center;font-size:9px;line-height:1.08;font-weight:900;letter-spacing:.38px;padding:6px}
 #mobileHint{position:absolute;left:50%;bottom:max(8px,calc(env(safe-area-inset-bottom) + 4px));transform:translateX(-50%);max-width:44vw;padding:5px 9px;border-radius:999px;background:rgba(6,11,22,.60);border:1px solid rgba(151,193,255,.10);font-size:8px;letter-spacing:.2px;color:rgba(196,221,247,.55);white-space:nowrap;pointer-events:none}
-#rotateHint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;padding:12px 16px;border-radius:15px;background:rgba(8,13,26,.88);border:1px solid rgba(155,205,255,.22);font-size:12px;font-weight:850;color:#dbeeff;pointer-events:none;backdrop-filter:blur(8px)}
-@media (orientation:portrait) and (pointer:coarse){body.touch-mode #rotateHint{display:block}}
+#rotateHint{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:34px;text-align:center;background:rgba(5,8,18,.94);font-size:14px;font-weight:850;line-height:1.55;color:#dbeeff;pointer-events:none;touch-action:none;backdrop-filter:blur(10px)}
+@media (orientation:portrait) and (pointer:coarse){
+body.touch-mode #rotateHint{display:flex;pointer-events:auto}
+body.touch-mode #mobileControls.active{pointer-events:none}
+}
 @media(max-height:440px){
 body.touch-mode #stance{top:max(36px,calc(env(safe-area-inset-top) + 36px));transform:translateX(-50%)}
 body.touch-mode #stanceText{font-size:7px;margin-bottom:2px}
@@ -123,7 +126,7 @@ body.touch-mode #mobileHint{display:none}
 <div class="pill">Çekirdek <b id="integrity">♥♥</b></div><div class="pill">Stability <b id="stability">—</b></div><div class="pill">Rezerv <b id="reserve">0</b></div><div class="pill">Serbest <b id="loose">0</b></div><div class="pill">FPS <b id="fps">60</b></div>
 </div>
 <div id="stance"><div id="stanceText">Dengeli yörünge</div><div id="stanceBar"><div id="stanceFill"></div></div></div>
-<div id="brand">ORBIT.IO V3.16.10 · RESPONSIVE MOBILE HUD</div>
+<div id="brand">ORBIT.IO V3.16.11 · PORTRAIT INPUT LOCK</div>
 <div id="leaderboard">
 <div class="lbTitle">ORBITAL RANKING</div>
 <div id="leaderRows"></div>
@@ -143,7 +146,7 @@ body.touch-mode #mobileHint{display:none}
 </div>
 <div id="rotateHint">↻ Daha rahat oynamak için telefonu yatay çevir</div>
 <div id="overlay"><div class="card">
-<h1>Orbit<span>.io</span> V3.16.10</h1>
+<h1>Orbit<span>.io</span> V3.16.11</h1>
 <p>Sistemin artık sadece dekor değil, <b>bedenin ve silahın.</b> 25+ kütlede <b>sağ tıkı 1.2 saniye basılı tutarak</b> kontrollü çöküş başlatırsın. Feda ettiğin kütle Black Hole çekim gücünü, olay ufkunu ve ömrünü belirler. Yuttuğun madde <b>Event Horizon Reserve</b> olarak birikir ve form bittiğinde yeni yörüngenin bir kısmına dönüşür.</p>
 <div class="rules" id="rules">
 <div class="rule"><b>Mouse wheel</b>İçe: savunma. Dışa: saldırı ve toplama.</div>
@@ -265,7 +268,7 @@ const standaloneMode=!!(
   (typeof navigator!=='undefined'&&navigator.standalone===true)
 );
 if(standaloneMode)document.body.classList.add('standalone-mode');
-const MOBILE_BUILD='3.16.10-responsive-hud';
+const MOBILE_BUILD='3.16.11-portrait-input-lock';
 const mobileInput={moveX:0,moveY:0,moveActive:false,joyPointer:null,bhPointer:null};
 const mobileAim={pointers:new Map(),primary:null,noFire:new Set(),pinchStartDist:0,pinchStartScale:1,relativeActive:false};
 
@@ -288,6 +291,9 @@ function cancelTransientInput(){
   M.left=false;
   M.right=false;
   resetMobileInput()
+}
+function mobilePortraitBlocked(){
+  return !!(touchCapable&&H>W)
 }
 function setMobileRunning(active){
   if(!touchCapable)return;
@@ -376,7 +382,7 @@ function configureTouchUI(){
     stick.style.transform='translate(-50%,-50%)'
   }
   joy.addEventListener('pointerdown',e=>{
-    if(e.pointerType==='mouse'||!running)return;
+    if(e.pointerType==='mouse'||!running||mobilePortraitBlocked())return;
     e.preventDefault();e.stopPropagation();
     mobileInput.joyPointer=e.pointerId;
     if(joy.setPointerCapture)joy.setPointerCapture(e.pointerId);
@@ -390,7 +396,7 @@ function configureTouchUI(){
   joy.addEventListener('lostpointercapture',endJoy);
 
   controls.addEventListener('pointerdown',e=>{
-    if(e.pointerType==='mouse'||!running)return;
+    if(e.pointerType==='mouse'||!running||mobilePortraitBlocked())return;
     if(e.target.closest&&e.target.closest('#joyPad,#bhTouch'))return;
     e.preventDefault();
     if(controls.setPointerCapture)controls.setPointerCapture(e.pointerId);
@@ -457,7 +463,7 @@ function configureTouchUI(){
     M.right=false
   }
   bh.addEventListener('pointerdown',e=>{
-    if(e.pointerType==='mouse'||!running||!player)return;
+    if(e.pointerType==='mouse'||!running||!player||mobilePortraitBlocked())return;
     e.preventDefault();e.stopPropagation();
     if(player.blackHole&&!player.rebirth){
       M.right=false;
@@ -472,6 +478,18 @@ function configureTouchUI(){
   bh.addEventListener('pointerup',stopBH);
   bh.addEventListener('pointercancel',stopBH);
   bh.addEventListener('lostpointercapture',stopBH);
+
+  const rotateHint=$('rotateHint');
+  if(rotateHint){
+    rotateHint.addEventListener('pointerdown',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      cancelTransientInput()
+    });
+    rotateHint.addEventListener('pointermove',e=>e.preventDefault());
+    rotateHint.addEventListener('pointerup',e=>e.preventDefault());
+    rotateHint.addEventListener('pointercancel',e=>e.preventDefault())
+  }
 }
 function updateMobileControls(){
   if(!touchCapable||!player)return;
@@ -4923,7 +4941,7 @@ const o=$('overlay');
 o.style.display='flex';
 o.innerHTML=`
   <div class="card">
-    <h1>Orbit<span>.io</span> V3.16.10</h1>
+    <h1>Orbit<span>.io</span> V3.16.11</h1>
     <p>
       Çekirdek bütünlüğün tamamen tükendi.
       Bu koşuyu <b>${score} skor</b> ile tamamladın.
