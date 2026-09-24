@@ -12,7 +12,7 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
-<title>Orbit.io V3.16.8 — Global Touch Router</title>
+<title>Orbit.io V3.16.9 — Global Touch Router</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#050812;color:#eef6ff;font-family:Inter,system-ui,Segoe UI,Arial}
 :root{--app-width:100vw;--app-height:100dvh}
@@ -103,7 +103,7 @@ body.touch-mode #mobileControls.active{display:block;position:fixed;inset:0;z-in
 <div class="pill">Çekirdek <b id="integrity">♥♥</b></div><div class="pill">Stability <b id="stability">—</b></div><div class="pill">Rezerv <b id="reserve">0</b></div><div class="pill">Serbest <b id="loose">0</b></div><div class="pill">FPS <b id="fps">60</b></div>
 </div>
 <div id="stance"><div id="stanceText">Dengeli yörünge</div><div id="stanceBar"><div id="stanceFill"></div></div></div>
-<div id="brand">ORBIT.IO V3.16.8 · MOBILE VIEWPORT STABILITY</div>
+<div id="brand">ORBIT.IO V3.16.9 · CAMERA HYSTERESIS</div>
 <div id="leaderboard">
 <div class="lbTitle">ORBITAL RANKING</div>
 <div id="leaderRows"></div>
@@ -123,7 +123,7 @@ body.touch-mode #mobileControls.active{display:block;position:fixed;inset:0;z-in
 </div>
 <div id="rotateHint">↻ Daha rahat oynamak için telefonu yatay çevir</div>
 <div id="overlay"><div class="card">
-<h1>Orbit<span>.io</span> V3.16.8</h1>
+<h1>Orbit<span>.io</span> V3.16.9</h1>
 <p>Sistemin artık sadece dekor değil, <b>bedenin ve silahın.</b> 25+ kütlede <b>sağ tıkı 1.2 saniye basılı tutarak</b> kontrollü çöküş başlatırsın. Feda ettiğin kütle Black Hole çekim gücünü, olay ufkunu ve ömrünü belirler. Yuttuğun madde <b>Event Horizon Reserve</b> olarak birikir ve form bittiğinde yeni yörüngenin bir kısmına dönüşür.</p>
 <div class="rules" id="rules">
 <div class="rule"><b>Mouse wheel</b>İçe: savunma. Dışa: saldırı ve toplama.</div>
@@ -245,7 +245,7 @@ const standaloneMode=!!(
   (typeof navigator!=='undefined'&&navigator.standalone===true)
 );
 if(standaloneMode)document.body.classList.add('standalone-mode');
-const MOBILE_BUILD='3.16.8-viewport-stability';
+const MOBILE_BUILD='3.16.9-camera-hysteresis';
 const mobileInput={moveX:0,moveY:0,moveActive:false,joyPointer:null,bhPointer:null};
 const mobileAim={pointers:new Map(),primary:null,noFire:new Set(),pinchStartDist:0,pinchStartScale:1,relativeActive:false};
 
@@ -494,7 +494,7 @@ AMBIENT_RESPAWN_BASE=.75,AMBIENT_RESPAWN_MAX=2.4,
 AMBIENT_LIFE_MIN=55,AMBIENT_LIFE_MAX=85,AMBIENT_FADE_TIME=10,
 METEOR_SMALL_SAFE_DEFAULT=18,METEOR_MEDIUM_MASS=30;
 const COL=[['#edf7ff','#87caff'],['#ff8fa5','#ff5976'],['#ffd67a','#ffb84c'],['#b49cff','#8c6cff'],['#82f0c2','#55cf9e'],['#ff9be4','#db63c3']];
-let systems=[],player,motes=[],shots=[],parts=[],asteroids=[],asteroidBelts=[],score=0,cam={x:0,y:0,zoom:1,targetZoom:1},toastTimer,collisionAcc=0,fpsSmoothed=60,leaderTimer=0,leaderId=null,leaderCache=[],miniTimer=0,ambientSpawnBudget=0,
+let systems=[],player,motes=[],shots=[],parts=[],asteroids=[],asteroidBelts=[],score=0,cam={x:0,y:0,zoom:1,targetZoom:1},mobileCameraMass=8,mobileCameraRecoveryDelay=0,toastTimer,collisionAcc=0,fpsSmoothed=60,leaderTimer=0,leaderId=null,leaderCache=[],miniTimer=0,ambientSpawnBudget=0,
 worldEvent={type:'none',phase:'idle',timer:0,next:0,x:0,y:0,vx:0,vy:0,
 sx:0,sy:0,ex:0,ey:0,dropTimer:0,drops:0,maxDrops:30,seed:0,
 terrainCrossing:false,terrainDrops:0},
@@ -2312,6 +2312,8 @@ function reset(){stopBlackHoleHum();runStats=freshRunStats();resetWorldEvent(tru
 for(let i=1;i<=BOTS;i++){let b=system(rand(250,WW-250),rand(220,WH-220),false,i);for(let j=0;j<Math.floor(rand(8,24));j++)addOrb(b);b.scale=rand(.82,1.28);systems.push(b)}
 for(let i=0;i<MOTES;i++)spawnAmbientMote(false);
 buildAsteroidBelts();
+mobileCameraMass=8;
+mobileCameraRecoveryDelay=0;
 const initialCamZoom=touchCapable?mobileCameraBaseZoom():1.06;
 cam.zoom=initialCamZoom;
 cam.targetZoom=initialCamZoom;
@@ -4115,14 +4117,41 @@ for(let i=0;i<Math.floor(rand(7,14));i++)addOrb(b)
 }
 function updateParts(dt){for(let p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.97;p.vy*=.97;p.life-=dt}parts=parts.filter(p=>p.life>0)}
 function mobileCameraBaseZoom(){
-  return Math.min(W,H)<=430?.62:.68
+  const shortSide=Math.min(W,H);
+  return clamp(.62+(shortSide-390)*.00016,.60,.68)
+}
+function mobileVisualMass(){
+  if(!player)return 8;
+  return Math.max(
+    8,
+    (player.blackHole||player.rebirth)
+      ?Math.max(mass(player),1+(player.bhFuel||0))
+      :mass(player)
+  )
+}
+function updateMobileCameraMass(dt){
+  const currentMass=mobileVisualMass();
+
+  // Growth must reveal more world quickly.
+  if(currentMass>=mobileCameraMass){
+    mobileCameraMass=currentMass;
+    mobileCameraRecoveryDelay=.80;
+    return
+  }
+
+  // Losses never pull the camera inward immediately. Wait briefly, then
+  // release the remembered mass at a bounded rate so firing/shed events do
+  // not create a visible zoom snap.
+  mobileCameraRecoveryDelay=Math.max(0,mobileCameraRecoveryDelay-dt);
+  if(mobileCameraRecoveryDelay<=0){
+    mobileCameraMass=Math.max(currentMass,mobileCameraMass-14*dt)
+  }
 }
 function cameraTargetZoom(){
   if(touchCapable){
-    const stableMass=Math.max(8,runStats.maxMass||8,mass(player));
     const base=mobileCameraBaseZoom();
     return clamp(
-      base-Math.max(0,stableMass-8)*.0018,
+      base-Math.max(0,mobileCameraMass-8)*.0018,
       .50,
       base
     )
@@ -4139,13 +4168,13 @@ function cameraTargetZoom(){
   )
 }
 function camera(dt){
+  if(touchCapable)updateMobileCameraMass(dt);
   const desiredZoom=cameraTargetZoom();
 
   if(touchCapable){
-    cam.targetZoom=Math.min(cam.zoom,desiredZoom);
-    if(cam.targetZoom<cam.zoom){
-      cam.zoom+=(cam.targetZoom-cam.zoom)*Math.min(1,dt*2.6)
-    }
+    cam.targetZoom=desiredZoom;
+    const zoomRate=desiredZoom<cam.zoom?2.7:.48;
+    cam.zoom+=(cam.targetZoom-cam.zoom)*Math.min(1,dt*zoomRate)
   }else{
     cam.targetZoom=desiredZoom;
     cam.zoom+=(cam.targetZoom-cam.zoom)*Math.min(1,dt*2.15)
@@ -4874,7 +4903,7 @@ const o=$('overlay');
 o.style.display='flex';
 o.innerHTML=`
   <div class="card">
-    <h1>Orbit<span>.io</span> V3.16.8</h1>
+    <h1>Orbit<span>.io</span> V3.16.9</h1>
     <p>
       Çekirdek bütünlüğün tamamen tükendi.
       Bu koşuyu <b>${score} skor</b> ile tamamladın.
