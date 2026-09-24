@@ -1,5 +1,4 @@
 name: Deploy Orbit.io to GitHub Pages
-# V3.16.6 global touch router release
 
 on:
   push:
@@ -7,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -24,171 +23,44 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Build V3.16.6 global touch router
+      - name: Validate canonical V3.16.6 source
         run: |
           set -euo pipefail
-          mkdir -p dist
-          BASE=3b531ac690da62950005f5e61c2b74c7d79d7beb
-          for p in 00 01 02 03 04 05 06 07; do
-            git show "$BASE:pwa/site.part$p"
-          done | base64 --decode | gzip --decompress > dist/index.html
+          test -f index.html
+          test -f manifest.webmanifest
+          test -f service-worker.js
+          test -f icon-180.png
+          test -f icon-512.png
 
+          grep -q 'V3.16.6' index.html
+          grep -q 'GLOBAL TOUCH ROUTER' index.html
+          grep -q "MOBILE_BUILD='3.16.6-global-router'" index.html
+          grep -q "controls.addEventListener('pointerdown'" index.html
+          grep -q 'orbit-io-v3-16-6' service-worker.js
+
+          python3 -m json.tool manifest.webmanifest >/dev/null
           python3 - <<'PY'
           from pathlib import Path
           import re
-
-          p=Path('dist/index.html')
-          text=p.read_text(encoding='utf-8')
-          text=text.replace('V3.16.2','V3.16.3')
-          text=text.replace('MOBILE CAMERA FIX','MOBILE CAMERA LOCK')
-          text=text.replace('Mobile Camera Fix','Mobile Camera Lock')
-
-          old='''function currentViewportBox(){
-            const vv=window.visualViewport;
-            const w=vv&&Number.isFinite(vv.width)?vv.width:innerWidth;
-            const h=vv&&Number.isFinite(vv.height)?vv.height:innerHeight;
-            return{
-              width:Math.max(1,Math.round(w)),
-              height:Math.max(1,Math.round(h))
-            }
-          }'''
-          new='''function currentViewportBox(){
-            const vv=window.visualViewport;
-            const scale=vv&&Number.isFinite(vv.scale)?Math.max(1,vv.scale):1;
-            const w=vv&&Number.isFinite(vv.width)?vv.width*scale:innerWidth;
-            const h=vv&&Number.isFinite(vv.height)?vv.height*scale:innerHeight;
-            return{
-              width:Math.max(1,Math.round(w)),
-              height:Math.max(1,Math.round(h))
-            }
-          }'''
-          if old not in text:
-            raise SystemExit('viewport block not found')
-          text=text.replace(old,new,1)
-
-          touch="""const touchCapable=!!(
-            (typeof navigator!=='undefined'&&(navigator.maxTouchPoints||0)>0)||
-            (typeof window!=='undefined'&&'ontouchstart' in window)||
-            (typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches)
-          );"""
-          if touch not in text:
-            raise SystemExit('touch block not found')
-          text=text.replace(touch,touch+'''\n\nif(touchCapable){\n  for(const type of ['gesturestart','gesturechange','gestureend']){\n    document.addEventListener(type,e=>e.preventDefault(),{passive:false})\n  }\n  document.addEventListener('touchmove',e=>{\n    if(e.touches&&e.touches.length>1)e.preventDefault()\n  },{passive:false})\n}''',1)
-
-          text=text.replace('const initialCamZoom=touchCapable?.82:1.06;','const initialCamZoom=touchCapable?mobileCameraBaseZoom():1.06;',1)
-
-          pattern=re.compile(r'''function cameraTargetZoom\(\)\{.*?\n\}\nfunction camera\(dt\)\{.*?\n\n\}''',re.S)
-          m=pattern.search(text)
-          if not m:
-            raise SystemExit('camera block not found')
-          replacement='''function mobileCameraBaseZoom(){
-            return Math.min(W,H)<=430?.62:.68
-          }
-          function cameraTargetZoom(){
-            if(touchCapable){
-              const stableMass=Math.max(8,runStats.maxMass||8,mass(player));
-              const base=mobileCameraBaseZoom();
-              return clamp(
-                base-Math.max(0,stableMass-8)*.0018,
-                .50,
-                base
-              )
-            }
-
-            const visualMass=(player.blackHole||player.rebirth)
-              ?Math.max(mass(player),1+(player.bhFuel||0))
-              :mass(player);
-
-            return clamp(
-              1.08-Math.max(0,visualMass-8)*.0064,
-              .72,
-              1.08
-            )
-          }
-          function camera(dt){
-            const desiredZoom=cameraTargetZoom();
-
-            if(touchCapable){
-              cam.targetZoom=Math.min(cam.zoom,desiredZoom);
-              if(cam.targetZoom<cam.zoom){
-                cam.zoom+=(cam.targetZoom-cam.zoom)*Math.min(1,dt*2.6)
-              }
-            }else{
-              cam.targetZoom=desiredZoom;
-              cam.zoom+=(cam.targetZoom-cam.zoom)*Math.min(1,dt*2.15)
-            }
-
-            const viewW=W/cam.zoom;
-            const viewH=H/cam.zoom;
-            const tx=player.x-viewW/2;
-            const ty=player.y-viewH/2;
-
-            const followRate=touchCapable?10.5:4.6;
-            cam.x+=(tx-cam.x)*Math.min(1,dt*followRate);
-            cam.y+=(ty-cam.y)*Math.min(1,dt*followRate);
-
-            cam.x=clamp(cam.x,0,Math.max(0,WW-viewW));
-            cam.y=clamp(cam.y,0,Math.max(0,WH-viewH));
-
-          }'''
-          text=text[:m.start()]+replacement+text[m.end():]
-
-          checks=[
-            'V3.16.3',
-            'MOBILE CAMERA LOCK',
-            'Math.min(W,H)<=430?.62:.68',
-            'cam.targetZoom=Math.min(cam.zoom,desiredZoom);',
-            "['gesturestart','gesturechange','gestureend']",
-            'vv.width*scale',
-            'followRate=touchCapable?10.5:4.6'
-          ]
-          for token in checks:
-            if token not in text:
-              raise SystemExit('missing '+token)
-          if '.82-Math.max(0,visualMass-8)*.0046' in text:
-            raise SystemExit('old mobile zoom curve remains')
-
-          p.write_text(text,encoding='utf-8')
+          text = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, flags=re.S|re.I)
+          if not scripts:
+              raise SystemExit('No inline script found')
+          Path('/tmp/orbit-inline.js').write_text('\n'.join(scripts), encoding='utf-8')
           PY
+          node --check /tmp/orbit-inline.js
 
-          python3 pwa/mobile-aim-patch.py
-          python3 pwa/global-touch-router-patch.py
-
-          git show "$BASE:pwa/manifest.webmanifest" > dist/manifest.webmanifest
-          git show "$BASE:pwa/service-worker.js" | sed -E 's/orbit-io-v3-16-[0-9]+/orbit-io-v3-16-6/g' > dist/service-worker.js
-          git show "$BASE:pwa/icon-180.png.b64" | base64 --decode > dist/icon-180.png
-          git show "$BASE:pwa/icon-512.png.b64" | base64 --decode > dist/icon-512.png
-          touch dist/.nojekyll
-
-          grep -q 'V3.16.6' dist/index.html
-          grep -q 'GLOBAL TOUCH ROUTER' dist/index.html
-          grep -q "MOBILE_BUILD='3.16.6-global-router'" dist/index.html
-          grep -q "controls.addEventListener('pointerdown'" dist/index.html
-          grep -q "e.target.closest('#joyPad,#bhTouch')" dist/index.html
-          grep -q 'pointer-events:none;touch-action:none;background:transparent' dist/index.html
-          grep -q "updateViaCache:'none'" dist/index.html
-          grep -q 'orbit-io-v3-16-6' dist/service-worker.js
-
-      - name: Canonicalize V3.16.6 source
+      - name: Build static PWA from canonical source
         run: |
           set -euo pipefail
-          cp dist/index.html index.html
-          cp dist/manifest.webmanifest manifest.webmanifest
-          cp dist/service-worker.js service-worker.js
-          cp dist/icon-180.png icon-180.png
-          cp dist/icon-512.png icon-512.png
-          printf 'Orbit.io canonical source: V3.16.6 global touch router\n' > .canonical-v3.16.6
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html manifest.webmanifest service-worker.js icon-180.png icon-512.png .canonical-v3.16.6
-          if ! git diff --cached --quiet; then
-            git commit -m "Canonicalize Orbit.io V3.16.6 source"
-            git push origin HEAD:main
-          fi
+          mkdir -p dist
+          cp index.html dist/index.html
+          cp manifest.webmanifest dist/manifest.webmanifest
+          cp service-worker.js dist/service-worker.js
+          cp icon-180.png dist/icon-180.png
+          cp icon-512.png dist/icon-512.png
+          touch dist/.nojekyll
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
