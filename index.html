@@ -12,7 +12,7 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
-<title>Orbit.io V3.16.7 — Global Touch Router</title>
+<title>Orbit.io V3.16.8 — Global Touch Router</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#050812;color:#eef6ff;font-family:Inter,system-ui,Segoe UI,Arial}
 :root{--app-width:100vw;--app-height:100dvh}
@@ -103,7 +103,7 @@ body.touch-mode #mobileControls.active{display:block;position:fixed;inset:0;z-in
 <div class="pill">Çekirdek <b id="integrity">♥♥</b></div><div class="pill">Stability <b id="stability">—</b></div><div class="pill">Rezerv <b id="reserve">0</b></div><div class="pill">Serbest <b id="loose">0</b></div><div class="pill">FPS <b id="fps">60</b></div>
 </div>
 <div id="stance"><div id="stanceText">Dengeli yörünge</div><div id="stanceBar"><div id="stanceFill"></div></div></div>
-<div id="brand">ORBIT.IO V3.16.7 · MOBILE INPUT SAFETY</div>
+<div id="brand">ORBIT.IO V3.16.8 · MOBILE VIEWPORT STABILITY</div>
 <div id="leaderboard">
 <div class="lbTitle">ORBITAL RANKING</div>
 <div id="leaderRows"></div>
@@ -123,7 +123,7 @@ body.touch-mode #mobileControls.active{display:block;position:fixed;inset:0;z-in
 </div>
 <div id="rotateHint">↻ Daha rahat oynamak için telefonu yatay çevir</div>
 <div id="overlay"><div class="card">
-<h1>Orbit<span>.io</span> V3.16.7</h1>
+<h1>Orbit<span>.io</span> V3.16.8</h1>
 <p>Sistemin artık sadece dekor değil, <b>bedenin ve silahın.</b> 25+ kütlede <b>sağ tıkı 1.2 saniye basılı tutarak</b> kontrollü çöküş başlatırsın. Feda ettiğin kütle Black Hole çekim gücünü, olay ufkunu ve ömrünü belirler. Yuttuğun madde <b>Event Horizon Reserve</b> olarak birikir ve form bittiğinde yeni yörüngenin bir kısmına dönüşür.</p>
 <div class="rules" id="rules">
 <div class="rule"><b>Mouse wheel</b>İçe: savunma. Dışa: saldırı ve toplama.</div>
@@ -152,24 +152,45 @@ function currentViewportBox(){
 }
 let initialViewport=currentViewportBox();
 let W=initialViewport.width,H=initialViewport.height,D=Math.min(devicePixelRatio||1,2);
-function resize(recenter=false){
-  const vp=currentViewportBox();
-  const changed=Math.abs(vp.width-W)>1||Math.abs(vp.height-H)>1;
-  W=vp.width;H=vp.height;D=Math.min(devicePixelRatio||1,2);
-  document.documentElement.style.setProperty('--app-width',W+'px');
-  document.documentElement.style.setProperty('--app-height',H+'px');
-  document.body.style.width=W+'px';
-  document.body.style.height=H+'px';
-  C.width=Math.max(1,Math.round(W*D));
-  C.height=Math.max(1,Math.round(H*D));
-  C.style.width=W+'px';
-  C.style.height=H+'px';
-  X.setTransform(D,0,0,D,0,0);
+let viewportSyncRaf=0,viewportSyncNeedsRecenter=false;
 
-  // Safari can change the visual viewport when its toolbars collapse/expand.
-  // Keep the player centered immediately so the camera never appears to slide
-  // sideways after a toolbar/orientation transition.
-  if(recenter&&changed&&running&&player){
+function resize(recenter=false,force=false){
+  const vp=currentViewportBox();
+  const nextD=Math.min(devicePixelRatio||1,2);
+  const sizeChanged=Math.abs(vp.width-W)>1||Math.abs(vp.height-H)>1;
+  const dprChanged=Math.abs(nextD-D)>.001;
+  const metricsChanged=sizeChanged||dprChanged;
+
+  W=vp.width;
+  H=vp.height;
+  D=nextD;
+
+  // Do not rewrite the canvas backing store unless its real pixel size changed.
+  // Assigning canvas.width/height clears the context and is expensive on iOS.
+  if(force||metricsChanged){
+    document.documentElement.style.setProperty('--app-width',W+'px');
+    document.documentElement.style.setProperty('--app-height',H+'px');
+    document.body.style.width=W+'px';
+    document.body.style.height=H+'px';
+
+    const pixelW=Math.max(1,Math.round(W*D));
+    const pixelH=Math.max(1,Math.round(H*D));
+    const backingStoreChanged=C.width!==pixelW||C.height!==pixelH;
+
+    if(backingStoreChanged){
+      C.width=pixelW;
+      C.height=pixelH
+    }
+    if(C.style.width!==W+'px')C.style.width=W+'px';
+    if(C.style.height!==H+'px')C.style.height=H+'px';
+
+    if(force||backingStoreChanged||dprChanged){
+      X.setTransform(D,0,0,D,0,0)
+    }
+  }
+
+  // Recenter only when the visible CSS viewport actually changed.
+  if(recenter&&sizeChanged&&running&&player){
     const viewW=W/cam.zoom;
     const viewH=H/cam.zoom;
     cam.x=clamp(player.x-viewW/2,0,Math.max(0,WW-viewW));
@@ -178,19 +199,31 @@ function resize(recenter=false){
     M.y=clamp(M.y,0,H)
   }
 }
-function syncViewport(){resize(true)}
+
+function scheduleViewportSync(recenter=true){
+  viewportSyncNeedsRecenter=viewportSyncNeedsRecenter||recenter;
+  if(viewportSyncRaf)return;
+  viewportSyncRaf=requestAnimationFrame(()=>{
+    viewportSyncRaf=0;
+    const shouldRecenter=viewportSyncNeedsRecenter;
+    viewportSyncNeedsRecenter=false;
+    resize(shouldRecenter)
+  })
+}
+
+function syncViewport(){scheduleViewportSync(true)}
 addEventListener('resize',syncViewport,{passive:true});
 addEventListener('orientationchange',()=>{
   cancelTransientInput();
-  syncViewport();
-  setTimeout(syncViewport,120);
-  setTimeout(syncViewport,360)
+  scheduleViewportSync(true);
+  setTimeout(()=>scheduleViewportSync(true),120);
+  setTimeout(()=>scheduleViewportSync(true),360)
 },{passive:true});
 if(window.visualViewport){
-  visualViewport.addEventListener('resize',syncViewport,{passive:true});
-  visualViewport.addEventListener('scroll',syncViewport,{passive:true})
+  visualViewport.addEventListener('resize',()=>scheduleViewportSync(true),{passive:true});
+  visualViewport.addEventListener('scroll',()=>scheduleViewportSync(true),{passive:true})
 }
-resize(false);
+resize(false,true);
 
 const K={},M={x:W/2,y:H/2,left:false,right:false}; let running=false,last=0;
 const touchCapable=!!(
@@ -212,7 +245,7 @@ const standaloneMode=!!(
   (typeof navigator!=='undefined'&&navigator.standalone===true)
 );
 if(standaloneMode)document.body.classList.add('standalone-mode');
-const MOBILE_BUILD='3.16.7-input-safety';
+const MOBILE_BUILD='3.16.8-viewport-stability';
 const mobileInput={moveX:0,moveY:0,moveActive:false,joyPointer:null,bhPointer:null};
 const mobileAim={pointers:new Map(),primary:null,noFire:new Set(),pinchStartDist:0,pinchStartScale:1,relativeActive:false};
 
@@ -4841,7 +4874,7 @@ const o=$('overlay');
 o.style.display='flex';
 o.innerHTML=`
   <div class="card">
-    <h1>Orbit<span>.io</span> V3.16.7</h1>
+    <h1>Orbit<span>.io</span> V3.16.8</h1>
     <p>
       Çekirdek bütünlüğün tamamen tükendi.
       Bu koşuyu <b>${score} skor</b> ile tamamladın.

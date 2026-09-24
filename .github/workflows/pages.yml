@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate canonical V3.16.7 source
+      - name: Validate canonical V3.16.8 source
         run: |
           set -euo pipefail
           test -f index.html
@@ -33,9 +33,9 @@ jobs:
           test -f icon-180.png
           test -f icon-512.png
 
-          grep -q 'V3.16.7' index.html
-          grep -q 'MOBILE INPUT SAFETY' index.html
-          grep -q "MOBILE_BUILD='3.16.7-input-safety'" index.html
+          grep -q 'V3.16.8' index.html
+          grep -q 'MOBILE VIEWPORT STABILITY' index.html
+          grep -q "MOBILE_BUILD='3.16.8-viewport-stability'" index.html
           grep -q "controls.addEventListener('pointerdown'" index.html
           grep -q "controls.addEventListener('pointercancel',e=>endAim(e,false))" index.html
           grep -q "controls.addEventListener('lostpointercapture',e=>endAim(e,false))" index.html
@@ -44,7 +44,13 @@ jobs:
           grep -q "document.addEventListener('visibilitychange'" index.html
           grep -q "addEventListener('pagehide',cancelTransientInput" index.html
           ! grep -q "controls.addEventListener('pointercancel',endAim)" index.html
-          grep -q 'orbit-io-v3-16-7' service-worker.js
+          grep -q "function scheduleViewportSync(recenter=true)" index.html
+          grep -q "const backingStoreChanged=C.width!==pixelW||C.height!==pixelH" index.html
+          grep -q "if(backingStoreChanged)" index.html
+          grep -q "visualViewport.addEventListener('scroll',()=>scheduleViewportSync(true)" index.html
+          ! grep -q "visualViewport.addEventListener('scroll',syncViewport" index.html
+          grep -q "resize(false,true)" index.html
+          grep -q 'orbit-io-v3-16-8' service-worker.js
 
           python3 -m json.tool manifest.webmanifest >/dev/null
           python3 - <<'PY'
