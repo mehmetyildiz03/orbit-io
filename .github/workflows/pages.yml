@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -171,6 +171,24 @@ jobs:
           grep -q 'pointer-events:none;touch-action:none;background:transparent' dist/index.html
           grep -q "updateViaCache:'none'" dist/index.html
           grep -q 'orbit-io-v3-16-6' dist/service-worker.js
+
+      - name: Canonicalize V3.16.6 source
+        run: |
+          set -euo pipefail
+          cp dist/index.html index.html
+          cp dist/manifest.webmanifest manifest.webmanifest
+          cp dist/service-worker.js service-worker.js
+          cp dist/icon-180.png icon-180.png
+          cp dist/icon-512.png icon-512.png
+          printf 'Orbit.io canonical source: V3.16.6 global touch router\n' > .canonical-v3.16.6
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html manifest.webmanifest service-worker.js icon-180.png icon-512.png .canonical-v3.16.6
+          if ! git diff --cached --quiet; then
+            git commit -m "Canonicalize Orbit.io V3.16.6 source"
+            git push origin HEAD:main
+          fi
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
