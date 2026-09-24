@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate canonical V3.16.9 source
+      - name: Validate canonical V3.16.10 source
         run: |
           set -euo pipefail
           test -f index.html
@@ -33,9 +33,9 @@ jobs:
           test -f icon-180.png
           test -f icon-512.png
 
-          grep -q 'V3.16.9' index.html
-          grep -q 'CAMERA HYSTERESIS' index.html
-          grep -q "MOBILE_BUILD='3.16.9-camera-hysteresis'" index.html
+          grep -q 'V3.16.10' index.html
+          grep -q 'RESPONSIVE MOBILE HUD' index.html
+          grep -q "MOBILE_BUILD='3.16.10-responsive-hud'" index.html
           grep -q "controls.addEventListener('pointerdown'" index.html
           grep -q "controls.addEventListener('pointercancel',e=>endAim(e,false))" index.html
           grep -q "controls.addEventListener('lostpointercapture',e=>endAim(e,false))" index.html
@@ -57,7 +57,12 @@ jobs:
           grep -q "return clamp(.62+(shortSide-390)\*.00016,.60,.68)" index.html
           ! grep -q "runStats.maxMass||8" index.html
           ! grep -q "cam.targetZoom=Math.min(cam.zoom,desiredZoom)" index.html
-          grep -q 'orbit-io-v3-16-9' service-worker.js
+          grep -q "body.touch-mode #miniWrap{right:max(7px,env(safe-area-inset-right));top:max(158px" index.html
+          grep -q "@media(max-height:440px)" index.html
+          grep -q "body.touch-mode #miniWrap{top:max(145px" index.html
+          grep -q "@media(max-height:350px)" index.html
+          grep -q "body.touch-mode #stance{top:max(38px" index.html
+          grep -q 'orbit-io-v3-16-10' service-worker.js
 
           python3 -m json.tool manifest.webmanifest >/dev/null
           python3 - <<'PY'

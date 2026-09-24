@@ -12,7 +12,7 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
-<title>Orbit.io V3.16.9 — Global Touch Router</title>
+<title>Orbit.io V3.16.10 — Responsive Mobile HUD</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#050812;color:#eef6ff;font-family:Inter,system-ui,Segoe UI,Arial}
 :root{--app-width:100vw;--app-height:100dvh}
@@ -69,12 +69,12 @@ body.touch-mode #brand{display:block;right:max(7px,env(safe-area-inset-right));t
 body.touch-mode #hud{left:max(8px,env(safe-area-inset-left));top:max(8px,env(safe-area-inset-top));gap:5px;max-width:46vw}
 body.touch-mode #hud .pill{padding:5px 8px;font-size:10px;background:rgba(8,13,26,.70)}
 body.touch-mode #hud .pill:nth-child(3),body.touch-mode #hud .pill:nth-child(4),body.touch-mode #hud .pill:nth-child(7),body.touch-mode #hud .pill:nth-child(8),body.touch-mode #hud .pill:nth-child(9){display:none}
-body.touch-mode #stance{top:max(8px,env(safe-area-inset-top))}
+body.touch-mode #stance{top:max(38px,calc(env(safe-area-inset-top) + 38px))}
 body.touch-mode #stanceText{font-size:8px;margin-bottom:3px;max-width:42vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-body.touch-mode #stanceBar{width:min(210px,34vw);height:5px}
+body.touch-mode #stanceBar{width:min(190px,31vw);height:5px}
 body.touch-mode #leaderboard{right:max(7px,env(safe-area-inset-right));top:max(34px,calc(env(safe-area-inset-top) + 34px));width:122px;padding:6px 7px 5px;border-radius:11px;opacity:.78}
 body.touch-mode .lbTitle{font-size:7px;margin-bottom:3px}.touch-mode .lbRow{height:16px;font-size:7px;grid-template-columns:13px minmax(0,1fr) auto;gap:3px}.touch-mode .lbMeta{font-size:6.5px}.touch-mode #yourRank{font-size:7px;margin-top:3px;padding-top:3px}
-body.touch-mode #miniWrap{right:max(7px,env(safe-area-inset-right));top:118px;bottom:auto;width:122px;padding:5px;border-radius:11px;opacity:.74}
+body.touch-mode #miniWrap{right:max(7px,env(safe-area-inset-right));top:max(158px,calc(env(safe-area-inset-top) + 158px));bottom:auto;width:122px;padding:5px;border-radius:11px;opacity:.74}
 body.touch-mode #miniTitle{font-size:6.5px;margin-bottom:3px}.touch-mode #miniHint{display:none}.touch-mode #minimap{width:110px;height:75px;border-radius:6px}
 body.touch-mode .card{width:min(680px,calc(100vw - 20px));max-height:calc(100vh - 16px);overflow:auto;padding:18px 20px;border-radius:20px}
 body.touch-mode .card h1{font-size:32px;letter-spacing:-1px}.touch-mode .card p{font-size:12px;line-height:1.4;margin:8px 0 10px}.touch-mode .rules{grid-template-columns:1fr 1fr;gap:7px;margin:10px 0 12px}.touch-mode .rule{padding:8px 9px;font-size:10px;border-radius:11px}.touch-mode .rule b{font-size:11px;margin-bottom:2px}.touch-mode .sub{font-size:9px;margin-top:8px}.touch-mode button#start,.touch-mode button#restart{padding:10px 15px;font-size:12px}
@@ -91,7 +91,27 @@ body.touch-mode #mobileControls.active{display:block;position:fixed;inset:0;z-in
 #mobileHint{position:absolute;left:50%;bottom:max(8px,calc(env(safe-area-inset-bottom) + 4px));transform:translateX(-50%);max-width:44vw;padding:5px 9px;border-radius:999px;background:rgba(6,11,22,.60);border:1px solid rgba(151,193,255,.10);font-size:8px;letter-spacing:.2px;color:rgba(196,221,247,.55);white-space:nowrap;pointer-events:none}
 #rotateHint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;padding:12px 16px;border-radius:15px;background:rgba(8,13,26,.88);border:1px solid rgba(155,205,255,.22);font-size:12px;font-weight:850;color:#dbeeff;pointer-events:none;backdrop-filter:blur(8px)}
 @media (orientation:portrait) and (pointer:coarse){body.touch-mode #rotateHint{display:block}}
-@media(max-height:440px){body.touch-mode #miniWrap{top:104px;transform:scale(.94);transform-origin:top right}body.touch-mode #leaderboard{transform:scale(.94);transform-origin:top right}body.touch-mode #stance{transform:translateX(-50%) scale(.9);transform-origin:top center}body.touch-mode .card{padding:12px 16px}.touch-mode .card h1{font-size:27px}.touch-mode .card p{font-size:10px}.touch-mode .rules{margin:7px 0 9px}.touch-mode .rule{padding:6px 8px}}
+@media(max-height:440px){
+body.touch-mode #stance{top:max(36px,calc(env(safe-area-inset-top) + 36px));transform:translateX(-50%)}
+body.touch-mode #stanceText{font-size:7px;margin-bottom:2px}
+body.touch-mode #stanceBar{width:min(164px,27vw);height:4px}
+body.touch-mode #leaderboard{top:max(31px,calc(env(safe-area-inset-top) + 31px));width:116px;padding:5px 6px 4px;transform:none}
+body.touch-mode .lbTitle{font-size:6.5px;margin-bottom:2px}
+body.touch-mode .lbRow{height:15px;font-size:6.5px;grid-template-columns:12px minmax(0,1fr) auto;gap:2px}
+body.touch-mode .lbMeta{font-size:6px}
+body.touch-mode #yourRank{font-size:6.5px;margin-top:2px;padding-top:2px}
+body.touch-mode #miniWrap{top:max(145px,calc(env(safe-area-inset-top) + 145px));width:116px;padding:5px;transform:none}
+body.touch-mode #minimap{width:104px;height:70px}
+body.touch-mode .card{padding:12px 16px}.touch-mode .card h1{font-size:27px}.touch-mode .card p{font-size:10px}.touch-mode .rules{margin:7px 0 9px}.touch-mode .rule{padding:6px 8px}
+}
+@media(max-height:350px){
+body.touch-mode #leaderboard{top:max(28px,calc(env(safe-area-inset-top) + 28px));width:108px}
+body.touch-mode .lbRow:nth-child(n+5){display:none}
+body.touch-mode #miniWrap{top:max(124px,calc(env(safe-area-inset-top) + 124px));width:108px}
+body.touch-mode #minimap{width:96px;height:62px}
+body.touch-mode #stance{top:max(33px,calc(env(safe-area-inset-top) + 33px))}
+body.touch-mode #mobileHint{display:none}
+}
 
 </style>
 </head>
@@ -103,7 +123,7 @@ body.touch-mode #mobileControls.active{display:block;position:fixed;inset:0;z-in
 <div class="pill">Çekirdek <b id="integrity">♥♥</b></div><div class="pill">Stability <b id="stability">—</b></div><div class="pill">Rezerv <b id="reserve">0</b></div><div class="pill">Serbest <b id="loose">0</b></div><div class="pill">FPS <b id="fps">60</b></div>
 </div>
 <div id="stance"><div id="stanceText">Dengeli yörünge</div><div id="stanceBar"><div id="stanceFill"></div></div></div>
-<div id="brand">ORBIT.IO V3.16.9 · CAMERA HYSTERESIS</div>
+<div id="brand">ORBIT.IO V3.16.10 · RESPONSIVE MOBILE HUD</div>
 <div id="leaderboard">
 <div class="lbTitle">ORBITAL RANKING</div>
 <div id="leaderRows"></div>
@@ -123,7 +143,7 @@ body.touch-mode #mobileControls.active{display:block;position:fixed;inset:0;z-in
 </div>
 <div id="rotateHint">↻ Daha rahat oynamak için telefonu yatay çevir</div>
 <div id="overlay"><div class="card">
-<h1>Orbit<span>.io</span> V3.16.9</h1>
+<h1>Orbit<span>.io</span> V3.16.10</h1>
 <p>Sistemin artık sadece dekor değil, <b>bedenin ve silahın.</b> 25+ kütlede <b>sağ tıkı 1.2 saniye basılı tutarak</b> kontrollü çöküş başlatırsın. Feda ettiğin kütle Black Hole çekim gücünü, olay ufkunu ve ömrünü belirler. Yuttuğun madde <b>Event Horizon Reserve</b> olarak birikir ve form bittiğinde yeni yörüngenin bir kısmına dönüşür.</p>
 <div class="rules" id="rules">
 <div class="rule"><b>Mouse wheel</b>İçe: savunma. Dışa: saldırı ve toplama.</div>
@@ -245,7 +265,7 @@ const standaloneMode=!!(
   (typeof navigator!=='undefined'&&navigator.standalone===true)
 );
 if(standaloneMode)document.body.classList.add('standalone-mode');
-const MOBILE_BUILD='3.16.9-camera-hysteresis';
+const MOBILE_BUILD='3.16.10-responsive-hud';
 const mobileInput={moveX:0,moveY:0,moveActive:false,joyPointer:null,bhPointer:null};
 const mobileAim={pointers:new Map(),primary:null,noFire:new Set(),pinchStartDist:0,pinchStartScale:1,relativeActive:false};
 
@@ -4903,7 +4923,7 @@ const o=$('overlay');
 o.style.display='flex';
 o.innerHTML=`
   <div class="card">
-    <h1>Orbit<span>.io</span> V3.16.9</h1>
+    <h1>Orbit<span>.io</span> V3.16.10</h1>
     <p>
       Çekirdek bütünlüğün tamamen tükendi.
       Bu koşuyu <b>${score} skor</b> ile tamamladın.
