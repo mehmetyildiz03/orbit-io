@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate canonical V3.16.6 source
+      - name: Validate canonical V3.16.7 source
         run: |
           set -euo pipefail
           test -f index.html
@@ -33,11 +33,18 @@ jobs:
           test -f icon-180.png
           test -f icon-512.png
 
-          grep -q 'V3.16.6' index.html
-          grep -q 'GLOBAL TOUCH ROUTER' index.html
-          grep -q "MOBILE_BUILD='3.16.6-global-router'" index.html
+          grep -q 'V3.16.7' index.html
+          grep -q 'MOBILE INPUT SAFETY' index.html
+          grep -q "MOBILE_BUILD='3.16.7-input-safety'" index.html
           grep -q "controls.addEventListener('pointerdown'" index.html
-          grep -q 'orbit-io-v3-16-6' service-worker.js
+          grep -q "controls.addEventListener('pointercancel',e=>endAim(e,false))" index.html
+          grep -q "controls.addEventListener('lostpointercapture',e=>endAim(e,false))" index.html
+          grep -q "joy.addEventListener('lostpointercapture',endJoy)" index.html
+          grep -q "bh.addEventListener('lostpointercapture',stopBH)" index.html
+          grep -q "document.addEventListener('visibilitychange'" index.html
+          grep -q "addEventListener('pagehide',cancelTransientInput" index.html
+          ! grep -q "controls.addEventListener('pointercancel',endAim)" index.html
+          grep -q 'orbit-io-v3-16-7' service-worker.js
 
           python3 -m json.tool manifest.webmanifest >/dev/null
           python3 - <<'PY'
