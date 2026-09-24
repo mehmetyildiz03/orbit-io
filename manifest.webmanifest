@@ -1,0 +1,16 @@
+{
+  "name": "Orbit.io",
+  "short_name": "Orbit.io",
+  "description": "Orbit.io orbital combat",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
+  "orientation": "landscape",
+  "background_color": "#050812",
+  "theme_color": "#050812",
+  "icons": [
+    {"src":"./icon-180.png","sizes":"180x180","type":"image/png"},
+    {"src":"./icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
