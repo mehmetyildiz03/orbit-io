@@ -12,7 +12,7 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
-<title>Orbit.io V3.16.12 — Sticky Relative Aim</title>
+<title>Orbit.io V3.16.13 — Release Hardening</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#050812;color:#eef6ff;font-family:Inter,system-ui,Segoe UI,Arial}
 :root{--app-width:100vw;--app-height:100dvh}
@@ -126,7 +126,7 @@ body.touch-mode #mobileHint{display:none}
 <div class="pill">Çekirdek <b id="integrity">♥♥</b></div><div class="pill">Stability <b id="stability">—</b></div><div class="pill">Rezerv <b id="reserve">0</b></div><div class="pill">Serbest <b id="loose">0</b></div><div class="pill">FPS <b id="fps">60</b></div>
 </div>
 <div id="stance"><div id="stanceText">Dengeli yörünge</div><div id="stanceBar"><div id="stanceFill"></div></div></div>
-<div id="brand">ORBIT.IO V3.16.12 · STICKY RELATIVE AIM</div>
+<div id="brand">ORBIT.IO V3.16.13 · RELEASE HARDENING</div>
 <div id="leaderboard">
 <div class="lbTitle">ORBITAL RANKING</div>
 <div id="leaderRows"></div>
@@ -146,8 +146,8 @@ body.touch-mode #mobileHint{display:none}
 </div>
 <div id="rotateHint">↻ Daha rahat oynamak için telefonu yatay çevir</div>
 <div id="overlay"><div class="card">
-<h1>Orbit<span>.io</span> V3.16.12</h1>
-<p>Sistemin artık sadece dekor değil, <b>bedenin ve silahın.</b> 25+ kütlede <b>sağ tıkı 1.2 saniye basılı tutarak</b> kontrollü çöküş başlatırsın. Feda ettiğin kütle Black Hole çekim gücünü, olay ufkunu ve ömrünü belirler. Yuttuğun madde <b>Event Horizon Reserve</b> olarak birikir ve form bittiğinde yeni yörüngenin bir kısmına dönüşür.</p>
+<h1>Orbit<span>.io</span> V3.16.13</h1>
+<p>Sistemin artık sadece dekor değil, <b>bedenin ve silahın.</b> 25+ kütlede masaüstünde <b>sağ tıkı</b>, telefonda <b>sağ alttaki Black Hole düğmesini</b> 1.2 saniye basılı tutarak kontrollü çöküş başlatırsın. Feda ettiğin kütle Black Hole çekim gücünü, olay ufkunu ve ömrünü belirler. Yuttuğun madde <b>Event Horizon Reserve</b> olarak birikir ve form bittiğinde yeni yörüngenin bir kısmına dönüşür.</p>
 <div class="rules" id="rules">
 <div class="rule"><b>Mouse wheel</b>İçe: savunma. Dışa: saldırı ve toplama.</div>
 <div class="rule"><b>Sol tık</b>Mouse yönündeki gerçek uydunu sapan gibi fırlat.</div>
@@ -268,7 +268,7 @@ const standaloneMode=!!(
   (typeof navigator!=='undefined'&&navigator.standalone===true)
 );
 if(standaloneMode)document.body.classList.add('standalone-mode');
-const MOBILE_BUILD='3.16.12-sticky-relative-aim';
+const MOBILE_BUILD='3.16.13-release-hardening';
 const mobileInput={moveX:0,moveY:0,moveActive:false,joyPointer:null,bhPointer:null};
 const mobileAim={pointers:new Map(),primary:null,noFire:new Set(),pinchStartDist:0,pinchStartScale:1,relativeActive:false};
 
@@ -290,6 +290,7 @@ function resetMobileInput(){
 function cancelTransientInput(){
   M.left=false;
   M.right=false;
+  for(const code in K)K[code]=false;
   resetMobileInput()
 }
 function mobilePortraitBlocked(){
@@ -369,7 +370,7 @@ function configureTouchUI(){
   if(rules){
     rules.innerHTML=`
       <div class="rule"><b>Sol joystick</b>Başparmağınla sistemi hareket ettir.</div>
-      <div class="rule"><b>Sağ taraf</b>Joystick ve Black Hole düğmesi dışında ekranın herhangi bir pikseline dokun; sürükle yön seçer, bırakınca ateş eder.</div>
+      <div class="rule"><b>Nişan / ateş</b>Joystick ve Black Hole düğmesi dışında ekranın herhangi bir pikseline dokun; sürükle yön seçer, bırakınca ateş eder.</div>
       <div class="rule"><b>İki parmak</b>Pinch içe: sıkı yörünge. Pinch dışa: geniş yörünge.</div>
       <div class="rule"><b>Black Hole</b>25+ kütlede sağ alttaki düğmeyi 1.2 sn basılı tut. BH sırasında dokun: erken Rebirth.</div>`
   }
@@ -4940,6 +4941,23 @@ last=now;
 fpsSmoothed+=((1/raw)-fpsSmoothed)*.08;
 update(dt);draw();requestAnimationFrame(loop)
 }
+function safeBestScore(currentScore){
+  const current=Number.isFinite(currentScore)?currentScore:0;
+  let previous=0;
+
+  try{
+    const stored=Number(localStorage.getItem('orbit_io_v2_best')||0);
+    if(Number.isFinite(stored)&&stored>0)previous=stored
+  }catch(e){}
+
+  const best=Math.max(current,previous);
+
+  try{
+    localStorage.setItem('orbit_io_v2_best',String(best))
+  }catch(e){}
+
+  return best
+}
 function gameOver(){
 if(!running)return;
 
@@ -4950,17 +4968,13 @@ stopBlackHoleHum();
 runStats.maxMass=Math.max(runStats.maxMass,mass(player));
 runStats.steals=Math.max(runStats.steals,player.steals||0);
 
-const best=Math.max(
-  score,
-  Number(localStorage.getItem('orbit_io_v2_best')||0)
-);
-localStorage.setItem('orbit_io_v2_best',best);
+const best=safeBestScore(score);
 
 const o=$('overlay');
 o.style.display='flex';
 o.innerHTML=`
   <div class="card">
-    <h1>Orbit<span>.io</span> V3.16.12</h1>
+    <h1>Orbit<span>.io</span> V3.16.13</h1>
     <p>
       Çekirdek bütünlüğün tamamen tükendi.
       Bu koşuyu <b>${score} skor</b> ile tamamladın.
