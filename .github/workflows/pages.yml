@@ -42,7 +42,9 @@ jobs:
           grep -q "joy.addEventListener('lostpointercapture',endJoy)" index.html
           grep -q "bh.addEventListener('lostpointercapture',stopBH)" index.html
           grep -q "document.addEventListener('visibilitychange'" index.html
-          grep -q "addEventListener('pagehide',cancelTransientInput" index.html
+          grep -q "addEventListener('pagehide',()=>{" index.html
+          grep -q "persistCurrentPersonalBest();" index.html
+          grep -q "cancelTransientInput()" index.html
           ! grep -q "controls.addEventListener('pointercancel',endAim)" index.html
           grep -q "function scheduleViewportSync(recenter=true)" index.html
           grep -q "const backingStoreChanged=C.width!==pixelW||C.height!==pixelH" index.html
