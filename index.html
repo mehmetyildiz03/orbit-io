@@ -12,7 +12,7 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
-<title>Orbit.io V3.16.13 — Release Hardening</title>
+<title>Orbit.io V3.17.0 — Personal Best Foundation</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#050812;color:#eef6ff;font-family:Inter,system-ui,Segoe UI,Arial}
 :root{--app-width:100vw;--app-height:100dvh}
@@ -54,6 +54,12 @@ h1{margin:0 0 8px;font-size:46px;line-height:1;letter-spacing:-2px}h1 span{color
 .runStat b{display:block;margin-bottom:4px;font-size:9px;letter-spacing:.55px;text-transform:uppercase;color:rgba(168,198,232,.53)}
 .runStat span{font-size:15px;font-weight:850;color:#edf7ff;font-variant-numeric:tabular-nums}
 .runMeta{margin:-3px 0 16px;font-size:10px;color:rgba(174,201,231,.52);line-height:1.5}
+.pbResult{margin:13px 0 4px;padding:10px 11px;border-radius:13px;background:rgba(115,190,255,.055);border:1px solid rgba(145,207,255,.13)}
+.pbResultTitle{margin-bottom:7px;font-size:8px;font-weight:900;letter-spacing:1.15px;color:rgba(174,216,255,.66)}
+.pbResultRows{display:flex;gap:7px;flex-wrap:wrap}
+.pbResultItem{min-width:0;flex:1 1 150px;padding:7px 8px;border-radius:9px;background:rgba(255,255,255,.025)}
+.pbResultItem b{display:block;margin-bottom:2px;font-size:9px;color:#edf8ff}
+.pbResultItem span{font-size:11px;font-weight:850;color:#a9d9ff;font-variant-numeric:tabular-nums}
 @media(max-width:650px){.runGrid{grid-template-columns:repeat(2,1fr)}}
 .rule{padding:12px;border-radius:15px;border:1px solid rgba(150,190,255,.12);background:rgba(255,255,255,.025);font-size:12px;color:#acb9ce}.rule b{display:block;color:#edf5ff;margin-bottom:4px;font-size:13px}
 button{border:0;border-radius:14px;padding:13px 18px;background:#edf5ff;color:#09101f;font-weight:900;font-size:14px;cursor:pointer}.sub{font-size:11px;color:#74849d;margin-top:12px}
@@ -126,7 +132,7 @@ body.touch-mode #mobileHint{display:none}
 <div class="pill">Çekirdek <b id="integrity">♥♥</b></div><div class="pill">Stability <b id="stability">—</b></div><div class="pill">Rezerv <b id="reserve">0</b></div><div class="pill">Serbest <b id="loose">0</b></div><div class="pill">FPS <b id="fps">60</b></div>
 </div>
 <div id="stance"><div id="stanceText">Dengeli yörünge</div><div id="stanceBar"><div id="stanceFill"></div></div></div>
-<div id="brand">ORBIT.IO V3.16.13 · RELEASE HARDENING</div>
+<div id="brand">ORBIT.IO V3.17.0 · PERSONAL BEST FOUNDATION</div>
 <div id="leaderboard">
 <div class="lbTitle">ORBITAL RANKING</div>
 <div id="leaderRows"></div>
@@ -146,7 +152,7 @@ body.touch-mode #mobileHint{display:none}
 </div>
 <div id="rotateHint">↻ Daha rahat oynamak için telefonu yatay çevir</div>
 <div id="overlay"><div class="card">
-<h1>Orbit<span>.io</span> V3.16.13</h1>
+<h1>Orbit<span>.io</span> V3.17.0</h1>
 <p>Sistemin artık sadece dekor değil, <b>bedenin ve silahın.</b> 25+ kütlede masaüstünde <b>sağ tıkı</b>, telefonda <b>sağ alttaki Black Hole düğmesini</b> 1.2 saniye basılı tutarak kontrollü çöküş başlatırsın. Feda ettiğin kütle Black Hole çekim gücünü, olay ufkunu ve ömrünü belirler. Yuttuğun madde <b>Event Horizon Reserve</b> olarak birikir ve form bittiğinde yeni yörüngenin bir kısmına dönüşür.</p>
 <div class="rules" id="rules">
 <div class="rule"><b>Mouse wheel</b>İçe: savunma. Dışa: saldırı ve toplama.</div>
@@ -268,7 +274,7 @@ const standaloneMode=!!(
   (typeof navigator!=='undefined'&&navigator.standalone===true)
 );
 if(standaloneMode)document.body.classList.add('standalone-mode');
-const MOBILE_BUILD='3.16.13-release-hardening';
+const MOBILE_BUILD='3.17.0-personal-best';
 const mobileInput={moveX:0,moveY:0,moveActive:false,joyPointer:null,bhPointer:null};
 const mobileAim={pointers:new Map(),primary:null,noFire:new Set(),pinchStartDist:0,pinchStartScale:1,relativeActive:false};
 
@@ -539,9 +545,15 @@ addEventListener('mousedown',e=>{
 addEventListener('mouseup',e=>{if(e.button===0)M.left=false;if(e.button===2)M.right=false});
 addEventListener('blur',cancelTransientInput);
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden)cancelTransientInput()
+  if(document.hidden){
+    persistCurrentPersonalBest();
+    cancelTransientInput()
+  }
 },{passive:true});
-addEventListener('pagehide',cancelTransientInput,{passive:true});
+addEventListener('pagehide',()=>{
+  persistCurrentPersonalBest();
+  cancelTransientInput()
+},{passive:true});
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(!running||player.blackHole||player.rebirth||player.collapseCharge>0)return;e.preventDefault();player.scale=clamp(player.scale-Math.sign(e.deltaY)*.08,.72,1.62)},{passive:false});
 
@@ -1931,6 +1943,218 @@ function formatRunTime(sec){
   const s=sec%60;
   return m+':'+String(s).padStart(2,'0')
 }
+
+const PB_KEY='orbit_io_v3_personal_bests';
+let personalBest=null;
+let runBestBaseline=null;
+let pbAnnounced=new Set();
+let pbNearAnnounced=new Set();
+
+function defaultPersonalBest(){
+  return{
+    score:0,
+    maxMass:0,
+    bestRank:BOTS+1,
+    elapsed:0,
+    steals:0,
+    collapses:0,
+    blackHoles:0,
+    coresConsumed:0
+  }
+}
+function normalizePersonalBest(raw){
+  const d=defaultPersonalBest();
+  if(!raw||typeof raw!=='object')return d;
+
+  for(const key of ['score','maxMass','elapsed','steals','collapses','blackHoles','coresConsumed']){
+    const v=Number(raw[key]);
+    if(Number.isFinite(v)&&v>=0)d[key]=Math.floor(v)
+  }
+
+  const rank=Number(raw.bestRank);
+  if(Number.isFinite(rank)){
+    d.bestRank=clamp(Math.floor(rank),1,BOTS+1)
+  }
+
+  return d
+}
+function loadPersonalBest(){
+  let pb=defaultPersonalBest();
+
+  try{
+    const raw=localStorage.getItem(PB_KEY);
+    if(raw)pb=normalizePersonalBest(JSON.parse(raw));
+
+    // Keep the score earned before the PB system was introduced.
+    const legacyScore=Number(localStorage.getItem('orbit_io_v2_best')||0);
+    if(Number.isFinite(legacyScore)&&legacyScore>pb.score){
+      pb.score=Math.floor(legacyScore)
+    }
+  }catch(e){}
+
+  return pb
+}
+function savePersonalBest(){
+  if(!personalBest)return false;
+
+  try{
+    localStorage.setItem(PB_KEY,JSON.stringify(personalBest));
+    localStorage.setItem('orbit_io_v2_best',String(personalBest.score||0));
+    return true
+  }catch(e){
+    return false
+  }
+}
+function currentPersonalBestSnapshot(){
+  if(!runStats||!player)return null;
+
+  return{
+    score:Math.max(0,Math.round(score||0)),
+    maxMass:Math.max(0,Math.round(runStats.maxMass||0)),
+    bestRank:clamp(
+      Number.isFinite(runStats.bestRank)?Math.floor(runStats.bestRank):BOTS+1,
+      1,BOTS+1
+    ),
+    elapsed:Math.max(0,Math.floor(runStats.elapsed||0)),
+    steals:Math.max(0,Math.floor(runStats.steals||0)),
+    collapses:Math.max(0,Math.floor(runStats.collapses||0)),
+    blackHoles:Math.max(0,Math.floor(runStats.blackHoles||0)),
+    coresConsumed:Math.max(0,Math.floor(runStats.coresConsumed||0))
+  }
+}
+function mergePersonalBest(snapshot){
+  if(!snapshot)return{changed:false,critical:false};
+  if(!personalBest)personalBest=loadPersonalBest();
+
+  let changed=false;
+  let critical=false;
+
+  for(const key of ['score','maxMass','elapsed','steals','collapses','blackHoles','coresConsumed']){
+    if(snapshot[key]>personalBest[key]){
+      personalBest[key]=snapshot[key];
+      changed=true;
+      if(key==='maxMass')critical=true
+    }
+  }
+
+  if(snapshot.bestRank<personalBest.bestRank){
+    personalBest.bestRank=snapshot.bestRank;
+    changed=true;
+    critical=true
+  }
+
+  return{changed,critical}
+}
+function persistCurrentPersonalBest(force=false){
+  if(!runStats||!player)return false;
+  const merged=mergePersonalBest(currentPersonalBestSnapshot());
+  if(force||merged.critical)savePersonalBest();
+  return merged.changed
+}
+function beginPersonalBestRun(){
+  personalBest=loadPersonalBest();
+  runBestBaseline={...personalBest};
+  pbAnnounced=new Set();
+  pbNearAnnounced=new Set()
+}
+function trackPersonalBests(){
+  if(!running||!player||!runBestBaseline)return;
+
+  const snap=currentPersonalBestSnapshot();
+  if(!snap)return;
+
+  const baselineMass=runBestBaseline.maxMass||0;
+  const nearGap=Math.max(2,Math.ceil(baselineMass*.08));
+
+  if(
+    baselineMass>=20 &&
+    snap.maxMass<baselineMass &&
+    snap.maxMass>=baselineMass-nearGap &&
+    !pbNearAnnounced.has('maxMass')
+  ){
+    pbNearAnnounced.add('maxMass');
+    toast('PB YAKIN · '+snap.maxMass+' / '+baselineMass)
+  }
+
+  if(
+    baselineMass>=12 &&
+    snap.maxMass>baselineMass &&
+    !pbAnnounced.has('maxMass')
+  ){
+    pbAnnounced.add('maxMass');
+    toast('YENİ KÜTLE REKORU · '+snap.maxMass)
+  }
+
+  if(
+    runBestBaseline.bestRank<BOTS+1 &&
+    snap.bestRank<runBestBaseline.bestRank &&
+    !pbAnnounced.has('bestRank')
+  ){
+    pbAnnounced.add('bestRank');
+    toast('YENİ SIRA REKORU · #'+snap.bestRank)
+  }
+
+  const merged=mergePersonalBest(snap);
+  if(merged.critical)savePersonalBest()
+}
+function personalBestResult(){
+  const snap=currentPersonalBestSnapshot()||defaultPersonalBest();
+  const base=runBestBaseline||defaultPersonalBest();
+
+  const records=[];
+  if(snap.maxMass>base.maxMass)records.push({key:'maxMass',label:'Zirve kütle',value:String(snap.maxMass)});
+  if(snap.bestRank<base.bestRank)records.push({key:'bestRank',label:'En iyi sıra',value:'#'+snap.bestRank});
+  if(snap.score>base.score)records.push({key:'score',label:'Skor',value:String(snap.score)});
+  if(snap.elapsed>base.elapsed)records.push({key:'elapsed',label:'En uzun koşu',value:formatRunTime(snap.elapsed)});
+  if(snap.steals>base.steals)records.push({key:'steals',label:'STEAL',value:String(snap.steals)});
+  if(snap.collapses>base.collapses)records.push({key:'collapses',label:'Çökertme',value:String(snap.collapses)});
+  if(snap.coresConsumed>base.coresConsumed)records.push({key:'coresConsumed',label:'Yutulan çekirdek',value:String(snap.coresConsumed)});
+  if(snap.blackHoles>base.blackHoles)records.push({key:'blackHoles',label:'Black Hole',value:'×'+snap.blackHoles});
+
+  return{snapshot:snap,baseline:base,records}
+}
+function personalBestSummaryHTML(result){
+  if(!result)return'';
+
+  const top=result.records.slice(0,2);
+  if(top.length){
+    return `
+      <div class="pbResult">
+        <div class="pbResultTitle">YENİ KİŞİSEL REKOR</div>
+        <div class="pbResultRows">
+          ${top.map(r=>`<div class="pbResultItem"><b>${r.label}</b><span>${r.value} ↑</span></div>`).join('')}
+        </div>
+      </div>
+    `
+  }
+
+  const base=result.baseline;
+  const snap=result.snapshot;
+
+  if(base.maxMass>=15&&snap.maxMass<base.maxMass&&snap.maxMass>=base.maxMass-Math.max(3,Math.ceil(base.maxMass*.12))){
+    return `
+      <div class="pbResult">
+        <div class="pbResultTitle">REKORA YAKLAŞTIN</div>
+        <div class="pbResultRows">
+          <div class="pbResultItem"><b>Zirve kütle</b><span>${snap.maxMass} / ${base.maxMass}</span></div>
+        </div>
+      </div>
+    `
+  }
+
+  if(base.bestRank<BOTS+1&&snap.bestRank===base.bestRank+1){
+    return `
+      <div class="pbResult">
+        <div class="pbResultTitle">REKORA YAKLAŞTIN</div>
+        <div class="pbResultRows">
+          <div class="pbResultItem"><b>En iyi sıra</b><span>#${snap.bestRank} · PB #${base.bestRank}</span></div>
+        </div>
+      </div>
+    `
+  }
+
+  return''
+}
 function updateRunStats(dt){
   if(!running||!player)return;
 
@@ -2366,7 +2590,7 @@ function drawCometOnMinimap(){
   MX.restore()
 }
 
-function reset(){stopBlackHoleHum();runStats=freshRunStats();resetWorldEvent(true);systems=[];motes=[];shots=[];parts=[];asteroids=[];asteroidBelts=[];score=0;collisionAcc=0;fpsSmoothed=60;leaderTimer=0;leaderId=null;leaderCache=[];miniTimer=0;ambientSpawnBudget=0;player=system(WW/2,WH/2,true,0);for(let i=0;i<8;i++)addOrb(player);systems.push(player);
+function reset(){stopBlackHoleHum();runStats=freshRunStats();beginPersonalBestRun();resetWorldEvent(true);systems=[];motes=[];shots=[];parts=[];asteroids=[];asteroidBelts=[];score=0;collisionAcc=0;fpsSmoothed=60;leaderTimer=0;leaderId=null;leaderCache=[];miniTimer=0;ambientSpawnBudget=0;player=system(WW/2,WH/2,true,0);for(let i=0;i<8;i++)addOrb(player);systems.push(player);
 for(let i=1;i<=BOTS;i++){let b=system(rand(250,WW-250),rand(220,WH-220),false,i);for(let j=0;j<Math.floor(rand(8,24));j++)addOrb(b);b.scale=rand(.82,1.28);systems.push(b)}
 for(let i=0;i<MOTES;i++)spawnAmbientMote(false);
 buildAsteroidBelts();
@@ -4474,6 +4698,7 @@ function update(dt){
   hud();
   updateMobileControls();
   refreshLeaderboard();
+  trackPersonalBests();
   drawMinimap()
 }
 const ws=(x,y)=>({x:x-cam.x,y:y-cam.y}),
@@ -4941,23 +5166,6 @@ last=now;
 fpsSmoothed+=((1/raw)-fpsSmoothed)*.08;
 update(dt);draw();requestAnimationFrame(loop)
 }
-function safeBestScore(currentScore){
-  const current=Number.isFinite(currentScore)?currentScore:0;
-  let previous=0;
-
-  try{
-    const stored=Number(localStorage.getItem('orbit_io_v2_best')||0);
-    if(Number.isFinite(stored)&&stored>0)previous=stored
-  }catch(e){}
-
-  const best=Math.max(current,previous);
-
-  try{
-    localStorage.setItem('orbit_io_v2_best',String(best))
-  }catch(e){}
-
-  return best
-}
 function gameOver(){
 if(!running)return;
 
@@ -4968,18 +5176,22 @@ stopBlackHoleHum();
 runStats.maxMass=Math.max(runStats.maxMass,mass(player));
 runStats.steals=Math.max(runStats.steals,player.steals||0);
 
-const best=safeBestScore(score);
+const pbResult=personalBestResult();
+mergePersonalBest(pbResult.snapshot);
+savePersonalBest();
+const best=personalBest.score;
 
 const o=$('overlay');
 o.style.display='flex';
 o.innerHTML=`
   <div class="card">
-    <h1>Orbit<span>.io</span> V3.16.13</h1>
+    <h1>Orbit<span>.io</span> V3.17.0</h1>
     <p>
       Çekirdek bütünlüğün tamamen tükendi.
       Bu koşuyu <b>${score} skor</b> ile tamamladın.
     </p>
 
+    ${personalBestSummaryHTML(pbResult)}
     ${runSummaryHTML(best)}
 
     <button id="restart">Tekrar Oyna</button>

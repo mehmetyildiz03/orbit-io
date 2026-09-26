@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate canonical V3.16.13 source
+      - name: Validate canonical V3.17.0 source
         run: |
           set -euo pipefail
           test -f index.html
@@ -33,9 +33,9 @@ jobs:
           test -f icon-180.png
           test -f icon-512.png
 
-          grep -q 'V3.16.13' index.html
-          grep -q 'RELEASE HARDENING' index.html
-          grep -q "MOBILE_BUILD='3.16.13-release-hardening'" index.html
+          grep -q 'V3.17.0' index.html
+          grep -q 'PERSONAL BEST FOUNDATION' index.html
+          grep -q "MOBILE_BUILD='3.17.0-personal-best'" index.html
           grep -q "controls.addEventListener('pointerdown'" index.html
           grep -q "controls.addEventListener('pointercancel',e=>endAim(e,false))" index.html
           grep -q "controls.addEventListener('lostpointercapture',e=>endAim(e,false))" index.html
@@ -73,13 +73,23 @@ jobs:
           grep -q "point.relative=true" index.html
           grep -q "relative:false,dirX:0,dirY:0" index.html
           ! grep -q "const deadZone=14" index.html
-          grep -q "function safeBestScore(currentScore)" index.html
-          grep -q "const best=safeBestScore(score)" index.html
           grep -q "for(const code in K)K\[code\]=false" index.html
           grep -q "<b>Nişan / ateş</b>" index.html
           grep -q "sağ alttaki Black Hole düğmesini" index.html
           ! grep -q "<b>Sağ taraf</b>" index.html
-          grep -q 'orbit-io-v3-16-13' service-worker.js
+          grep -q "const PB_KEY='orbit_io_v3_personal_bests'" index.html
+          grep -q "function loadPersonalBest()" index.html
+          grep -q "function trackPersonalBests()" index.html
+          grep -q "function personalBestResult()" index.html
+          grep -q "function personalBestSummaryHTML(result)" index.html
+          grep -q "beginPersonalBestRun()" index.html
+          grep -q "trackPersonalBests();" index.html
+          grep -q "persistCurrentPersonalBest();" index.html
+          grep -q "YENİ KÜTLE REKORU" index.html
+          grep -q "PB YAKIN" index.html
+          grep -q "YENİ KİŞİSEL REKOR" index.html
+          ! grep -q "function safeBestScore(currentScore)" index.html
+          grep -q 'orbit-io-v3-17-0' service-worker.js
 
           python3 -m json.tool manifest.webmanifest >/dev/null
           python3 - <<'PY'
