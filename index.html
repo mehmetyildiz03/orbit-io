@@ -12,7 +12,7 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
-<title>Orbit.io V3.17.0 — Personal Best Foundation</title>
+<title>Orbit.io V3.17.1 — Clutch Feedback</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#050812;color:#eef6ff;font-family:Inter,system-ui,Segoe UI,Arial}
 :root{--app-width:100vw;--app-height:100dvh}
@@ -132,7 +132,7 @@ body.touch-mode #mobileHint{display:none}
 <div class="pill">Çekirdek <b id="integrity">♥♥</b></div><div class="pill">Stability <b id="stability">—</b></div><div class="pill">Rezerv <b id="reserve">0</b></div><div class="pill">Serbest <b id="loose">0</b></div><div class="pill">FPS <b id="fps">60</b></div>
 </div>
 <div id="stance"><div id="stanceText">Dengeli yörünge</div><div id="stanceBar"><div id="stanceFill"></div></div></div>
-<div id="brand">ORBIT.IO V3.17.0 · PERSONAL BEST FOUNDATION</div>
+<div id="brand">ORBIT.IO V3.17.1 · CLUTCH FEEDBACK</div>
 <div id="leaderboard">
 <div class="lbTitle">ORBITAL RANKING</div>
 <div id="leaderRows"></div>
@@ -152,7 +152,7 @@ body.touch-mode #mobileHint{display:none}
 </div>
 <div id="rotateHint">↻ Daha rahat oynamak için telefonu yatay çevir</div>
 <div id="overlay"><div class="card">
-<h1>Orbit<span>.io</span> V3.17.0</h1>
+<h1>Orbit<span>.io</span> V3.17.1</h1>
 <p>Sistemin artık sadece dekor değil, <b>bedenin ve silahın.</b> 25+ kütlede masaüstünde <b>sağ tıkı</b>, telefonda <b>sağ alttaki Black Hole düğmesini</b> 1.2 saniye basılı tutarak kontrollü çöküş başlatırsın. Feda ettiğin kütle Black Hole çekim gücünü, olay ufkunu ve ömrünü belirler. Yuttuğun madde <b>Event Horizon Reserve</b> olarak birikir ve form bittiğinde yeni yörüngenin bir kısmına dönüşür.</p>
 <div class="rules" id="rules">
 <div class="rule"><b>Mouse wheel</b>İçe: savunma. Dışa: saldırı ve toplama.</div>
@@ -274,7 +274,7 @@ const standaloneMode=!!(
   (typeof navigator!=='undefined'&&navigator.standalone===true)
 );
 if(standaloneMode)document.body.classList.add('standalone-mode');
-const MOBILE_BUILD='3.17.0-personal-best';
+const MOBILE_BUILD='3.17.1-clutch-feedback';
 const mobileInput={moveX:0,moveY:0,moveActive:false,joyPointer:null,bhPointer:null};
 const mobileAim={pointers:new Map(),primary:null,noFire:new Set(),pinchStartDist:0,pinchStartScale:1,relativeActive:false};
 
@@ -564,13 +564,21 @@ AMBIENT_RESPAWN_BASE=.75,AMBIENT_RESPAWN_MAX=2.4,
 AMBIENT_LIFE_MIN=55,AMBIENT_LIFE_MAX=85,AMBIENT_FADE_TIME=10,
 METEOR_SMALL_SAFE_DEFAULT=18,METEOR_MEDIUM_MASS=30;
 const COL=[['#edf7ff','#87caff'],['#ff8fa5','#ff5976'],['#ffd67a','#ffb84c'],['#b49cff','#8c6cff'],['#82f0c2','#55cf9e'],['#ff9be4','#db63c3']];
-let systems=[],player,motes=[],shots=[],parts=[],asteroids=[],asteroidBelts=[],score=0,cam={x:0,y:0,zoom:1,targetZoom:1},mobileCameraMass=8,mobileCameraRecoveryDelay=0,toastTimer,collisionAcc=0,fpsSmoothed=60,leaderTimer=0,leaderId=null,leaderCache=[],miniTimer=0,ambientSpawnBudget=0,
+let systems=[],player,motes=[],shots=[],parts=[],asteroids=[],asteroidBelts=[],score=0,cam={x:0,y:0,zoom:1,targetZoom:1},mobileCameraMass=8,mobileCameraRecoveryDelay=0,toastTimer,toastPriority=0,toastPriorityUntil=0,collisionAcc=0,fpsSmoothed=60,leaderTimer=0,leaderId=null,leaderCache=[],miniTimer=0,ambientSpawnBudget=0,
 worldEvent={type:'none',phase:'idle',timer:0,next:0,x:0,y:0,vx:0,vy:0,
 sx:0,sy:0,ex:0,ey:0,dropTimer:0,drops:0,maxDrops:30,seed:0,
 terrainCrossing:false,terrainDrops:0},
 runStats={elapsed:0,maxMass:8,bestRank:6,shots:0,orbsDetached:0,
 resonanceHits:0,maxResonance:1,collapses:0,steals:0,cometMatter:0,
 blackHoles:0,coresConsumed:0};
+let clutchState={
+  globalUntil:0,
+  lastPriority:0,
+  keyUntil:Object.create(null),
+  damageWindowStart:-99,
+  damageLosses:0,
+  lastOrbitShown:false
+};
 const rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function system(x,y,isPlayer=false,i=0){
 let c=COL[i%COL.length];
@@ -2073,7 +2081,7 @@ function trackPersonalBests(){
     !pbNearAnnounced.has('maxMass')
   ){
     pbNearAnnounced.add('maxMass');
-    toast('PB YAKIN · '+snap.maxMass+' / '+baselineMass)
+    toast('PB YAKIN · '+snap.maxMass+' / '+baselineMass,5,1350)
   }
 
   if(
@@ -2082,7 +2090,7 @@ function trackPersonalBests(){
     !pbAnnounced.has('maxMass')
   ){
     pbAnnounced.add('maxMass');
-    toast('YENİ KÜTLE REKORU · '+snap.maxMass)
+    toast('YENİ KÜTLE REKORU · '+snap.maxMass,5,1350)
   }
 
   if(
@@ -2091,7 +2099,7 @@ function trackPersonalBests(){
     !pbAnnounced.has('bestRank')
   ){
     pbAnnounced.add('bestRank');
-    toast('YENİ SIRA REKORU · #'+snap.bestRank)
+    toast('YENİ SIRA REKORU · #'+snap.bestRank,5,1350)
   }
 
   const merged=mergePersonalBest(snap);
@@ -2590,7 +2598,7 @@ function drawCometOnMinimap(){
   MX.restore()
 }
 
-function reset(){stopBlackHoleHum();runStats=freshRunStats();beginPersonalBestRun();resetWorldEvent(true);systems=[];motes=[];shots=[];parts=[];asteroids=[];asteroidBelts=[];score=0;collisionAcc=0;fpsSmoothed=60;leaderTimer=0;leaderId=null;leaderCache=[];miniTimer=0;ambientSpawnBudget=0;player=system(WW/2,WH/2,true,0);for(let i=0;i<8;i++)addOrb(player);systems.push(player);
+function reset(){stopBlackHoleHum();runStats=freshRunStats();beginPersonalBestRun();resetClutchFeedback();resetWorldEvent(true);systems=[];motes=[];shots=[];parts=[];asteroids=[];asteroidBelts=[];score=0;collisionAcc=0;fpsSmoothed=60;leaderTimer=0;leaderId=null;leaderCache=[];miniTimer=0;ambientSpawnBudget=0;player=system(WW/2,WH/2,true,0);for(let i=0;i<8;i++)addOrb(player);systems.push(player);
 for(let i=1;i<=BOTS;i++){let b=system(rand(250,WW-250),rand(220,WH-220),false,i);for(let j=0;j<Math.floor(rand(8,24));j++)addOrb(b);b.scale=rand(.82,1.28);systems.push(b)}
 for(let i=0;i<MOTES;i++)spawnAmbientMote(false);
 buildAsteroidBelts();
@@ -2601,7 +2609,149 @@ cam.zoom=initialCamZoom;
 cam.targetZoom=initialCamZoom;
 cam.x=clamp(player.x-W/(2*cam.zoom),0,Math.max(0,WW-W/cam.zoom));
 cam.y=clamp(player.y-H/(2*cam.zoom),0,Math.max(0,WH-H/cam.zoom));refreshLeaderboard(true);drawMinimap(true)}
-function toast(t){let e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('show'),1100)}
+function toast(t,priority=3,duration=1100){
+  const now=performance.now()/1000;
+  if(now<toastPriorityUntil&&priority<toastPriority)return false;
+
+  const e=$('toast');
+  e.textContent=t;
+  e.classList.add('show');
+  toastPriority=priority;
+  toastPriorityUntil=now+duration/1000;
+
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{
+    e.classList.remove('show');
+    if(performance.now()/1000>=toastPriorityUntil){
+      toastPriority=0;
+      toastPriorityUntil=0
+    }
+  },duration);
+
+  return true
+}
+function resetClutchFeedback(){
+  clutchState={
+    globalUntil:0,
+    lastPriority:0,
+    keyUntil:Object.create(null),
+    damageWindowStart:-99,
+    damageLosses:0,
+    lastOrbitShown:false
+  };
+  toastPriority=0;
+  toastPriorityUntil=0;
+  clearTimeout(toastTimer);
+  const e=$('toast');
+  if(e)e.classList.remove('show')
+}
+function emitClutch(text,key,cooldown=4,priority=2){
+  if(!running||!runStats)return false;
+
+  const now=runStats.elapsed||0;
+  if(now<(clutchState.keyUntil[key]||0))return false;
+  if(now<clutchState.globalUntil&&priority<=clutchState.lastPriority)return false;
+  if(!toast(text,priority,1100))return false;
+
+  clutchState.keyUntil[key]=now+cooldown;
+  clutchState.globalUntil=now+2.5;
+  clutchState.lastPriority=priority;
+  return true
+}
+function notePlayerOrbDamage(beforeCount,afterCount){
+  if(!running||!player||player.blackHole||player.rebirth)return;
+  if(beforeCount<=afterCount)return;
+
+  const now=runStats.elapsed||0;
+  if(now-clutchState.damageWindowStart>2.5){
+    clutchState.damageWindowStart=now;
+    clutchState.damageLosses=0
+  }
+
+  clutchState.damageLosses+=beforeCount-afterCount;
+
+  if(
+    !clutchState.lastOrbitShown &&
+    now>=3 &&
+    afterCount>=1 &&
+    afterCount<=3 &&
+    clutchState.damageLosses>=2 &&
+    player.collapses<2
+  ){
+    if(emitClutch('LAST ORBIT · '+afterCount+' UYDU','lastOrbit',999,4)){
+      clutchState.lastOrbitShown=true
+    }
+  }
+}
+function shotThreatensPlayerCore(sh,x=sh?.x,y=sh?.y){
+  if(
+    !running||!player||player.dead||player.blackHole||player.rebirth||
+    player.inv>0||!sh||sh.owner===player
+  )return false;
+
+  const relX=x-player.x;
+  const relY=y-player.y;
+  const rvx=sh.vx-player.vx;
+  const rvy=sh.vy-player.vy;
+  const speed2=rvx*rvx+rvy*rvy;
+  if(speed2<1)return false;
+
+  const t=-(relX*rvx+relY*rvy)/speed2;
+  if(t<0||t>.75)return false;
+
+  const closestX=relX+rvx*t;
+  const closestY=relY+rvy*t;
+  const coreRadius=12+(sh.size||0)+3;
+
+  return closestX*closestX+closestY*closestY<=coreRadius*coreRadius
+}
+function segmentPointDistance(ax,ay,bx,by,px,py){
+  const dx=bx-ax,dy=by-ay;
+  const len2=dx*dx+dy*dy;
+  if(len2<.0001)return Math.hypot(px-ax,py-ay);
+
+  const t=clamp(((px-ax)*dx+(py-ay)*dy)/len2,0,1);
+  return Math.hypot(
+    px-(ax+dx*t),
+    py-(ay+dy*t)
+  )
+}
+function trackEnemyNearMiss(sh,prevX,prevY){
+  if(
+    !running||!player||player.dead||player.blackHole||player.rebirth||
+    player.inv>0||!sh||sh.owner===player||sh.playerNearMissDone
+  )return;
+
+  const coreRadius=12+(sh.size||0);
+  const outerRadius=coreRadius+18;
+  const segD=segmentPointDistance(
+    prevX,prevY,sh.x,sh.y,
+    player.x,player.y
+  );
+
+  sh.playerClosest=Math.min(
+    Number.isFinite(sh.playerClosest)?sh.playerClosest:Infinity,
+    segD
+  );
+
+  const relX=sh.x-player.x;
+  const relY=sh.y-player.y;
+  const rvx=sh.vx-player.vx;
+  const rvy=sh.vy-player.vy;
+  const movingAway=relX*rvx+relY*rvy>0;
+
+  if(!movingAway)return;
+  if(sh.playerClosest>outerRadius+8)return;
+
+  sh.playerNearMissDone=true;
+
+  if(
+    sh.playerClosest>coreRadius+3 &&
+    sh.playerClosest<=outerRadius
+  ){
+    emitClutch('NEAR MISS','nearMiss',4,2)
+  }
+}
 function aim(){return{x:cam.x+M.x/cam.zoom,y:cam.y+M.y/cam.zoom}}
 function findAimOrb(s,ang){let bi=-1,bd=9;for(let i=0;i<s.orbs.length;i++){let d=Math.abs(Math.atan2(Math.sin(s.orbs[i].theta-ang),Math.cos(s.orbs[i].theta-ang)));if(d<bd){bd=d;bi=i}}return bi}
 function launch(s,ang){
@@ -4095,7 +4245,9 @@ function updateMotes(dt){
 function chip(v,i,hx,hy,a,impactVx=0,impactVy=0,resonanceLinks=0,resonanceDepth=1){
 if(i<0||i>=v.orbs.length)return null;
 
+const beforeCount=v.orbs.length;
 let [o]=v.orbs.splice(i,1);
+if(v.isPlayer)notePlayerOrbDamage(beforeCount,v.orbs.length);
 let ang=Math.atan2(v.y-hy,v.x-hx);
 
 const fragment=freeOrb(
@@ -4187,13 +4339,14 @@ if(v.collapses>=2){
   if(v.isPlayer)gameOver();
   else{v.dead=true;setTimeout(()=>respawn(v),1400)}
 }else{
-  if(v.isPlayer)toast('FORCED COLLAPSE · bir çekirdek bütünlüğü kaybettin');
+  if(v.isPlayer)toast('FORCED COLLAPSE · bir çekirdek bütünlüğü kaybettin',5,1350);
   v.vx+=(v.x-hx)*1.2;v.vy+=(v.y-hy)*1.2
 }
 }
 function updateShots(dt){
 for(let i=shots.length-1;i>=0;i--){
   let sh=shots[i];
+  const prevX=sh.x,prevY=sh.y;
   sh.x+=sh.vx*dt;sh.y+=sh.vy*dt;
   sh.vx*=Math.pow(.998,dt*60);sh.vy*=Math.pow(.998,dt*60);
   sh.life-=dt;
@@ -4202,6 +4355,7 @@ for(let i=shots.length-1;i>=0;i--){
   for(let ai=asteroids.length-1;ai>=0;ai--){
     const a=asteroids[ai],dx=sh.x-a.x,dy=sh.y-a.y,rr=sh.size+asteroidHitRadius(a);
     if(dx*dx+dy*dy<rr*rr){
+      const coreSaved=shotThreatensPlayerCore(sh,sh.x,sh.y);
       const sm=sh.weight||1;
       // Environmental interaction: projectiles only push rocks a little.
       // Small rocks are easy to shove, medium rocks respond modestly,
@@ -4233,6 +4387,10 @@ for(let i=shots.length-1;i>=0;i--){
         a.heavy?7:5
       );
       fxAsteroid(hitX,hitY,false);
+
+      if(coreSaved){
+        emitClutch('CORE SAVED · METEOR','coreSaved',6,4)
+      }
 
       shots.splice(i,1);rem=true;break
     }
@@ -4289,6 +4447,9 @@ for(let i=shots.length-1;i>=0;i--){
   }
 
   if(rem)continue;
+
+  trackEnemyNearMiss(sh,prevX,prevY);
+
   if(sh.life<=0||sh.x<0||sh.x>WW||sh.y<0||sh.y>WH){
     spawnM(clamp(sh.x,8,WW-8),clamp(sh.y,8,WH-8),sh.vx*.12,sh.vy*.12,sh.size,sh.weight||1,sh.kind||'mote',sh.owner?.id??null,true,sh.owner?.accent??null);
     shots.splice(i,1)
@@ -5185,7 +5346,7 @@ const o=$('overlay');
 o.style.display='flex';
 o.innerHTML=`
   <div class="card">
-    <h1>Orbit<span>.io</span> V3.17.0</h1>
+    <h1>Orbit<span>.io</span> V3.17.1</h1>
     <p>
       Çekirdek bütünlüğün tamamen tükendi.
       Bu koşuyu <b>${score} skor</b> ile tamamladın.
