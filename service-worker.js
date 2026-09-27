@@ -1,4 +1,4 @@
-// V3.17.2 impulse specialization polish
+// V3.17.2 impulse specialization polish r2
 const CACHE = 'orbit-io-v3-17-2';
 const ASSETS = ['./','./index.html','./manifest.webmanifest','./icon-180.png','./icon-512.png'];
 self.addEventListener('install', event => {
