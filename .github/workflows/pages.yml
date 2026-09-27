@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate canonical V3.17.1 source
+      - name: Validate canonical V3.17.2 source
         run: |
           set -euo pipefail
           test -f index.html
@@ -33,9 +33,9 @@ jobs:
           test -f icon-180.png
           test -f icon-512.png
 
-          grep -q 'V3.17.1' index.html
-          grep -q 'CLUTCH FEEDBACK' index.html
-          grep -q "MOBILE_BUILD='3.17.1-clutch-feedback'" index.html
+          grep -q 'V3.17.2' index.html
+          grep -q 'IMPULSE SPECIALIZATION' index.html
+          grep -q "MOBILE_BUILD='3.17.2-impulse-specialization'" index.html
           grep -q "controls.addEventListener('pointerdown'" index.html
           grep -q "controls.addEventListener('pointercancel',e=>endAim(e,false))" index.html
           grep -q "controls.addEventListener('lostpointercapture',e=>endAim(e,false))" index.html
@@ -102,7 +102,25 @@ jobs:
           grep -q "trackEnemyNearMiss(sh,prevX,prevY)" index.html
           grep -q "if(v.isPlayer)notePlayerOrbDamage(beforeCount,v.orbs.length)" index.html
           grep -q "toast('PB YAKIN · '+snap.maxMass+' / '+baselineMass,5,1350)" index.html
-          grep -q 'orbit-io-v3-17-1' service-worker.js
+          grep -q "SPECIALIZATION_MASS=18" index.html
+          grep -q "IMPULSE_COOLDOWN=3.5" index.html
+          grep -q "const SPECIALIZATIONS={" index.html
+          grep -q "function resetRunSpecialization()" index.html
+          grep -q "function updateRunSpecialization(dt)" index.html
+          grep -q "function chooseSpecialization(id)" index.html
+          grep -q "function specializationDirection()" index.html
+          grep -q "function impulseBurnOrb(dir)" index.html
+          grep -q "function useImpulseBurn()" index.html
+          grep -q "function handleSpecializationInput()" index.html
+          grep -q "runSpecialization.selected=id" index.html
+          grep -q "runSpecialization.cooldown=IMPULSE_COOLDOWN" index.html
+          grep -q "player.orbs.splice(idx,1)" index.html
+          grep -q "fragment.escapeTime=2.0" index.html
+          grep -q "e.code==='Space'&&!e.repeat" index.html
+          grep -q "id=\"skillTouch\"" index.html
+          grep -q "#joyPad,#skillTouch,#bhTouch" index.html
+          grep -q "IMPULSE BURN · 1 UYDU AYRILDI" index.html
+          grep -q 'orbit-io-v3-17-2' service-worker.js
 
           python3 -m json.tool manifest.webmanifest >/dev/null
           python3 - <<'PY'

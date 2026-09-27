@@ -12,7 +12,7 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
-<title>Orbit.io V3.17.1 — Clutch Feedback</title>
+<title>Orbit.io V3.17.2 — Impulse Specialization</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#050812;color:#eef6ff;font-family:Inter,system-ui,Segoe UI,Arial}
 :root{--app-width:100vw;--app-height:100dvh}
@@ -74,7 +74,7 @@ body.touch-mode #help{display:none}
 body.touch-mode #brand{display:block;right:max(7px,env(safe-area-inset-right));top:max(7px,env(safe-area-inset-top));padding:4px 7px;border-radius:999px;font-size:7px;letter-spacing:.50px;opacity:.72}
 body.touch-mode #hud{left:max(8px,env(safe-area-inset-left));top:max(8px,env(safe-area-inset-top));gap:5px;max-width:46vw}
 body.touch-mode #hud .pill{padding:5px 8px;font-size:10px;background:rgba(8,13,26,.70)}
-body.touch-mode #hud .pill:nth-child(3),body.touch-mode #hud .pill:nth-child(4),body.touch-mode #hud .pill:nth-child(7),body.touch-mode #hud .pill:nth-child(8),body.touch-mode #hud .pill:nth-child(9){display:none}
+body.touch-mode #hud .pill:nth-child(3),body.touch-mode #hud .pill:nth-child(4),body.touch-mode #skillPill,body.touch-mode #hud .pill:nth-child(8),body.touch-mode #hud .pill:nth-child(9),body.touch-mode #hud .pill:nth-child(10){display:none}
 body.touch-mode #stance{top:max(38px,calc(env(safe-area-inset-top) + 38px))}
 body.touch-mode #stanceText{font-size:8px;margin-bottom:3px;max-width:42vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.touch-mode #stanceBar{width:min(190px,31vw);height:5px}
@@ -90,6 +90,10 @@ body.touch-mode #mobileControls.active{display:block;position:fixed;inset:0;z-in
 #joyPad{position:absolute;z-index:2;left:max(20px,calc(env(safe-area-inset-left) + 14px));bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px));width:clamp(94px,16vw,126px);height:clamp(94px,16vw,126px);border-radius:50%;pointer-events:auto;touch-action:none;background:radial-gradient(circle,rgba(125,199,255,.07),rgba(48,88,145,.08));border:1px solid rgba(166,214,255,.18);box-shadow:inset 0 0 28px rgba(90,160,235,.05);backdrop-filter:blur(2px)}
 #joyPad:after{content:'';position:absolute;left:50%;top:50%;width:28%;height:28%;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(202,235,255,.10)}
 #joyStick{position:absolute;left:50%;top:50%;width:42%;height:42%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(237,249,255,.28),rgba(112,190,255,.15));border:1px solid rgba(198,233,255,.30);box-shadow:0 5px 22px rgba(0,0,0,.20);pointer-events:none;will-change:transform}
+#skillTouch{position:absolute;z-index:3;left:max(154px,calc(env(safe-area-inset-left) + 148px));bottom:max(24px,calc(env(safe-area-inset-bottom) + 18px));width:clamp(72px,10.5vw,88px);height:clamp(46px,6.7vw,54px);padding:0;border-radius:14px;overflow:hidden;pointer-events:auto;touch-action:none;background:rgba(8,14,26,.74);border:1px solid rgba(171,218,255,.19);color:#ddecff;box-shadow:0 7px 23px rgba(0,0,0,.18);backdrop-filter:blur(7px)}
+#skillTouch.locked{opacity:.34}#skillTouch.select{border-color:rgba(149,218,255,.58);background:rgba(16,35,58,.82)}#skillTouch.ready{border-color:rgba(183,231,255,.48)}#skillTouch.cooldown{opacity:.68}
+#skillTouchFill{position:absolute;left:0;bottom:0;top:0;width:0;background:linear-gradient(90deg,rgba(95,187,255,.10),rgba(168,230,255,.25));transition:width .06s linear;pointer-events:none}
+#skillTouchLabel{position:relative;z-index:1;display:flex;width:100%;height:100%;align-items:center;justify-content:center;text-align:center;font-size:8.5px;line-height:1.07;font-weight:900;letter-spacing:.34px;padding:5px}
 #bhTouch{position:absolute;z-index:2;right:max(14px,calc(env(safe-area-inset-right) + 10px));bottom:max(14px,calc(env(safe-area-inset-bottom) + 10px));width:clamp(76px,12vw,94px);height:clamp(50px,7.6vw,60px);padding:0;border-radius:15px;overflow:hidden;pointer-events:auto;touch-action:none;background:rgba(8,14,26,.72);border:1px solid rgba(180,222,255,.22);color:#ddecff;box-shadow:0 8px 26px rgba(0,0,0,.20);backdrop-filter:blur(7px)}
 #bhTouch.locked{opacity:.42}#bhTouch.ready{border-color:rgba(155,218,255,.40)}#bhTouch.rebirth{border-color:rgba(222,239,255,.62);background:rgba(25,43,68,.86)}
 #bhTouchFill{position:absolute;left:0;bottom:0;top:0;width:0;background:linear-gradient(90deg,rgba(94,174,255,.13),rgba(156,224,255,.28));transition:width .06s linear;pointer-events:none}
@@ -129,10 +133,10 @@ body.touch-mode #mobileHint{display:none}
 <div id="hud">
 <div class="pill">Kütle <b id="mass">0</b></div><div class="pill">Skor <b id="score">0</b></div>
 <div class="pill">Çekim <b id="gravity">0</b></div><div class="pill">Hız <b id="speed">0</b></div>
-<div class="pill">Çekirdek <b id="integrity">♥♥</b></div><div class="pill">Stability <b id="stability">—</b></div><div class="pill">Rezerv <b id="reserve">0</b></div><div class="pill">Serbest <b id="loose">0</b></div><div class="pill">FPS <b id="fps">60</b></div>
+<div class="pill">Çekirdek <b id="integrity">♥♥</b></div><div class="pill" id="skillPill">Skill <b id="skillState">18+</b></div><div class="pill">Stability <b id="stability">—</b></div><div class="pill">Rezerv <b id="reserve">0</b></div><div class="pill">Serbest <b id="loose">0</b></div><div class="pill">FPS <b id="fps">60</b></div>
 </div>
 <div id="stance"><div id="stanceText">Dengeli yörünge</div><div id="stanceBar"><div id="stanceFill"></div></div></div>
-<div id="brand">ORBIT.IO V3.17.1 · CLUTCH FEEDBACK</div>
+<div id="brand">ORBIT.IO V3.17.2 · IMPULSE SPECIALIZATION</div>
 <div id="leaderboard">
 <div class="lbTitle">ORBITAL RANKING</div>
 <div id="leaderRows"></div>
@@ -143,25 +147,26 @@ body.touch-mode #mobileHint{display:none}
 <div id="miniTitle"><span>SEKTÖR</span><span id="miniHint">yalnız büyük tehditler</span></div>
 <canvas id="minimap" width="360" height="244"></canvas>
 </div>
-<div id="help">WASD · Wheel: yörünge · Sol tık: uydu fırlat · Sağ tık basılı: Black Hole · <b>Black Hole sırasında sağ tık:</b> erken Rebirth</div>
+<div id="help">WASD · Wheel: yörünge · Sol tık: uydu fırlat · <b>SPACE: 18+ Impulse</b> · Sağ tık basılı: Black Hole · BH sırasında sağ tık: erken Rebirth</div>
 <div id="mobileControls" aria-hidden="true">
   <div id="mobileAimZone" aria-label="Nişan alanı"></div>
   <div id="joyPad" aria-label="Hareket joystick"><div id="joyStick"></div></div>
+  <button id="skillTouch" type="button" aria-label="Impulse Burn"><span id="skillTouchFill"></span><span id="skillTouchLabel">IMPULSE<br>18+</span></button>
   <button id="bhTouch" type="button" aria-label="Black Hole"><span id="bhTouchFill"></span><span id="bhTouchLabel">BLACK HOLE<br>25+</span></button>
   <div id="mobileHint">JOYSTICK: HAREKET · DİĞER HER PİKSEL: NİŞAN / BIRAK ATEŞ · 2 PARMAK: YÖRÜNGE</div>
 </div>
 <div id="rotateHint">↻ Daha rahat oynamak için telefonu yatay çevir</div>
 <div id="overlay"><div class="card">
-<h1>Orbit<span>.io</span> V3.17.1</h1>
-<p>Sistemin artık sadece dekor değil, <b>bedenin ve silahın.</b> 25+ kütlede masaüstünde <b>sağ tıkı</b>, telefonda <b>sağ alttaki Black Hole düğmesini</b> 1.2 saniye basılı tutarak kontrollü çöküş başlatırsın. Feda ettiğin kütle Black Hole çekim gücünü, olay ufkunu ve ömrünü belirler. Yuttuğun madde <b>Event Horizon Reserve</b> olarak birikir ve form bittiğinde yeni yörüngenin bir kısmına dönüşür.</p>
+<h1>Orbit<span>.io</span> V3.17.2</h1>
+<p>Sistemin artık sadece dekor değil, <b>bedenin ve silahın.</b> 18 kütleye ulaştığında koşun için tek bir aktif uzmanlaşma seçebilirsin; ilk uzmanlık <b>Impulse Burn</b>. Her kullanım gerçek bir dış uyduyu geriye savurup çekirdeğine tepki itkisi verir. 25+ kütlede kontrollü Black Hole dönüşümü ayrıca açılır.</p>
 <div class="rules" id="rules">
 <div class="rule"><b>Mouse wheel</b>İçe: savunma. Dışa: saldırı ve toplama.</div>
 <div class="rule"><b>Sol tık</b>Mouse yönündeki gerçek uydunu sapan gibi fırlat.</div>
-<div class="rule"><b>Gravity Tug</b>Kopan uydular sahipli fragment olarak kalır; iki sistem aynı anda çekebilir. Rakibin fragmentini kaparsan STEAL +1.</div>
+<div class="rule"><b>SPACE · Impulse</b>18 kütlede ilk basış uzmanlaşmayı seçer. Sonraki kullanım 1 gerçek dış uyduyu ayırıp hareket yönüne sert tepki itkisi verir.</div>
 <div class="rule"><b>Kontrollü çöküş</b>Sağ tıkı basılı tut: tüm kütleni feda et, çekirdek canını koru ve Black Hole ol.</div>
 </div>
 <button id="start">Orbital Combat'ı Oyna</button>
-<div class="sub">Masaüstü ve mobil aynı oyunu kullanır. Telefonda sol joystick ile hareket et, joystick dışındaki herhangi bir yerde dokun-sürükle-bırak ile ateş et, iki parmakla yörüngeyi daralt/genişlet ve sağ alttaki düğmeyi 1.2 saniye basılı tutarak Black Hole başlat. Ana ekrana eklediğinde tarayıcı çubukları olmadan uygulama gibi açılır. Mobil kamera daha geniş görüş verir ve oyuncuyu otomatik merkezde tutar; manuel kamera sürükleme yoktur.</div>
+<div class="sub">Bir koşuda yalnız bir aktif uzmanlaşma seçilebilir ve run bitene kadar değişmez. Telefonda sol joystick hareketi, ekranın geri kalanı nişan/ateşi, iki parmak yörüngeyi; joystick yanındaki IMPULSE düğmesi uzmanlaşmayı ve kullanımı kontrol eder. Black Hole ayrı büyük dönüşümdür.</div>
 </div></div>
 <script>
 
@@ -274,7 +279,7 @@ const standaloneMode=!!(
   (typeof navigator!=='undefined'&&navigator.standalone===true)
 );
 if(standaloneMode)document.body.classList.add('standalone-mode');
-const MOBILE_BUILD='3.17.1-clutch-feedback';
+const MOBILE_BUILD='3.17.2-impulse-specialization';
 const mobileInput={moveX:0,moveY:0,moveActive:false,joyPointer:null,bhPointer:null};
 const mobileAim={pointers:new Map(),primary:null,noFire:new Set(),pinchStartDist:0,pinchStartScale:1,relativeActive:false};
 
@@ -378,13 +383,14 @@ function configureTouchUI(){
       <div class="rule"><b>Sol joystick</b>Başparmağınla sistemi hareket ettir.</div>
       <div class="rule"><b>Nişan / ateş</b>Joystick ve Black Hole düğmesi dışında ekranın herhangi bir pikseline dokun; sürükle yön seçer, bırakınca ateş eder.</div>
       <div class="rule"><b>İki parmak</b>Pinch içe: sıkı yörünge. Pinch dışa: geniş yörünge.</div>
+      <div class="rule"><b>Impulse · 18+</b>Joystick yanındaki IMPULSE düğmesine ilk dokunuş uzmanlaşır; sonraki kullanım 1 uydu ayırır.</div>
       <div class="rule"><b>Black Hole</b>25+ kütlede sağ alttaki düğmeyi 1.2 sn basılı tut. BH sırasında dokun: erken Rebirth.</div>`
   }
   const startBtn=$('start');
   if(startBtn)startBtn.textContent='Mobilde Oyna';
 
-  const controls=$('mobileControls'),joy=$('joyPad'),stick=$('joyStick'),aimZone=$('mobileAimZone'),bh=$('bhTouch');
-  if(!controls||!joy||!stick||!aimZone||!bh)return;
+  const controls=$('mobileControls'),joy=$('joyPad'),stick=$('joyStick'),aimZone=$('mobileAimZone'),skill=$('skillTouch'),bh=$('bhTouch');
+  if(!controls||!joy||!stick||!aimZone||!skill||!bh)return;
 
   function updateJoy(e){
     const r=joy.getBoundingClientRect();
@@ -422,7 +428,7 @@ function configureTouchUI(){
 
   controls.addEventListener('pointerdown',e=>{
     if(e.pointerType==='mouse'||!running||mobilePortraitBlocked())return;
-    if(e.target.closest&&e.target.closest('#joyPad,#bhTouch'))return;
+    if(e.target.closest&&e.target.closest('#joyPad,#skillTouch,#bhTouch'))return;
     e.preventDefault();
     if(controls.setPointerCapture)controls.setPointerCapture(e.pointerId);
     mobileAim.pointers.set(e.pointerId,{
@@ -482,6 +488,12 @@ function configureTouchUI(){
   controls.addEventListener('pointercancel',e=>endAim(e,false));
   controls.addEventListener('lostpointercapture',e=>endAim(e,false));
 
+  skill.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse'||!running||!player||mobilePortraitBlocked())return;
+    e.preventDefault();e.stopPropagation();
+    handleSpecializationInput()
+  });
+
   function stopBH(e){
     if(mobileInput.bhPointer!==e.pointerId)return;
     e.preventDefault();
@@ -519,21 +531,83 @@ function configureTouchUI(){
 }
 function updateMobileControls(){
   if(!touchCapable||!player)return;
+
   const btn=$('bhTouch'),fill=$('bhTouchFill'),label=$('bhTouchLabel');
-  if(!btn||!fill||!label)return;
-  btn.classList.remove('locked','ready','rebirth');
-  if(!running){fill.style.width='0%';label.innerHTML='BLACK HOLE<br>25+';btn.classList.add('locked');return}
-  if(player.rebirth){fill.style.width='0%';label.innerHTML='REBIRTH…';btn.classList.add('locked');return}
-  if(player.blackHole){fill.style.width='100%';label.innerHTML='ERKEN<br>REBIRTH';btn.classList.add('rebirth');return}
-  const m=mass(player);
-  if(m<BH_MIN_MASS){fill.style.width='0%';label.innerHTML='BLACK HOLE<br>'+m+' / '+BH_MIN_MASS;btn.classList.add('locked');return}
-  const pct=clamp(player.collapseCharge/BH_CHARGE*100,0,100);
-  fill.style.width=pct+'%';
-  label.innerHTML=player.collapseCharge>0?('BLACK HOLE<br>'+player.collapseCharge.toFixed(1)+' / '+BH_CHARGE.toFixed(1)+'s'):'BLACK HOLE<br>BASILI TUT';
-  btn.classList.add('ready')
+  if(btn&&fill&&label){
+    btn.classList.remove('locked','ready','rebirth');
+
+    if(!running){
+      fill.style.width='0%';label.innerHTML='BLACK HOLE<br>25+';btn.classList.add('locked')
+    }else if(player.rebirth){
+      fill.style.width='0%';label.innerHTML='REBIRTH…';btn.classList.add('locked')
+    }else if(player.blackHole){
+      fill.style.width='100%';label.innerHTML='ERKEN<br>REBIRTH';btn.classList.add('rebirth')
+    }else{
+      const m=mass(player);
+      if(m<BH_MIN_MASS){
+        fill.style.width='0%';label.innerHTML='BLACK HOLE<br>'+m+' / '+BH_MIN_MASS;btn.classList.add('locked')
+      }else{
+        const pct=clamp(player.collapseCharge/BH_CHARGE*100,0,100);
+        fill.style.width=pct+'%';
+        label.innerHTML=player.collapseCharge>0
+          ?('BLACK HOLE<br>'+player.collapseCharge.toFixed(1)+' / '+BH_CHARGE.toFixed(1)+'s')
+          :'BLACK HOLE<br>BASILI TUT';
+        btn.classList.add('ready')
+      }
+    }
+  }
+
+  const skillBtn=$('skillTouch'),skillFill=$('skillTouchFill'),skillLabel=$('skillTouchLabel');
+  if(!skillBtn||!skillFill||!skillLabel)return;
+
+  skillBtn.classList.remove('locked','select','ready','cooldown');
+  skillFill.style.width='0%';
+
+  if(!running||player.blackHole||player.rebirth||player.collapseCharge>0){
+    skillLabel.innerHTML='IMPULSE<br>—';
+    skillBtn.classList.add('locked');
+    return
+  }
+
+  if(!runSpecialization.selected){
+    if(!runSpecialization.ready){
+      skillLabel.innerHTML='IMPULSE<br>'+Math.min(mass(player),SPECIALIZATION_MASS)+' / '+SPECIALIZATION_MASS;
+      skillBtn.classList.add('locked')
+    }else{
+      skillLabel.innerHTML='IMPULSE<br>SEÇ';
+      skillBtn.classList.add('select')
+    }
+    return
+  }
+
+  if(runSpecialization.cooldown>0){
+    const remaining=runSpecialization.cooldown;
+    const pct=clamp((IMPULSE_COOLDOWN-remaining)/IMPULSE_COOLDOWN*100,0,100);
+    skillFill.style.width=pct+'%';
+    skillLabel.innerHTML='IMPULSE<br>'+remaining.toFixed(1)+'s';
+    skillBtn.classList.add('cooldown');
+    return
+  }
+
+  if(!player.orbs.length){
+    skillLabel.innerHTML='IMPULSE<br>UYDU YOK';
+    skillBtn.classList.add('locked');
+    return
+  }
+
+  skillFill.style.width='100%';
+  skillLabel.innerHTML='IMPULSE<br>HAZIR';
+  skillBtn.classList.add('ready')
 }
 
-addEventListener('keydown',e=>K[e.code]=true);addEventListener('keyup',e=>K[e.code]=false);
+addEventListener('keydown',e=>{
+  K[e.code]=true;
+  if(e.code==='Space'&&!e.repeat){
+    e.preventDefault();
+    handleSpecializationInput()
+  }
+});
+addEventListener('keyup',e=>K[e.code]=false);
 addEventListener('mousemove',e=>{M.x=e.clientX;M.y=e.clientY});
 addEventListener('mousedown',e=>{
   if(e.button===0){M.left=true;slingshot()}
@@ -562,7 +636,8 @@ ORBIT_STABLE_LIMIT=60,SHED_WARNING_MIN=.82,SHED_WARNING_MAX=1.18,
 SHED_ESCAPE_TIME=1.25,SHED_RELATIVE_SPEED_MAX=160,MAX_ORBIT_RADIUS=158,
 AMBIENT_RESPAWN_BASE=.75,AMBIENT_RESPAWN_MAX=2.4,
 AMBIENT_LIFE_MIN=55,AMBIENT_LIFE_MAX=85,AMBIENT_FADE_TIME=10,
-METEOR_SMALL_SAFE_DEFAULT=18,METEOR_MEDIUM_MASS=30;
+METEOR_SMALL_SAFE_DEFAULT=18,METEOR_MEDIUM_MASS=30,
+SPECIALIZATION_MASS=18,IMPULSE_COOLDOWN=3.5,IMPULSE_THRUST=255,IMPULSE_EJECT_SPEED=355;
 const COL=[['#edf7ff','#87caff'],['#ff8fa5','#ff5976'],['#ffd67a','#ffb84c'],['#b49cff','#8c6cff'],['#82f0c2','#55cf9e'],['#ff9be4','#db63c3']];
 let systems=[],player,motes=[],shots=[],parts=[],asteroids=[],asteroidBelts=[],score=0,cam={x:0,y:0,zoom:1,targetZoom:1},mobileCameraMass=8,mobileCameraRecoveryDelay=0,toastTimer,toastPriority=0,toastPriorityUntil=0,collisionAcc=0,fpsSmoothed=60,leaderTimer=0,leaderId=null,leaderCache=[],miniTimer=0,ambientSpawnBudget=0,
 worldEvent={type:'none',phase:'idle',timer:0,next:0,x:0,y:0,vx:0,vy:0,
@@ -570,7 +645,16 @@ sx:0,sy:0,ex:0,ey:0,dropTimer:0,drops:0,maxDrops:30,seed:0,
 terrainCrossing:false,terrainDrops:0},
 runStats={elapsed:0,maxMass:8,bestRank:6,shots:0,orbsDetached:0,
 resonanceHits:0,maxResonance:1,collapses:0,steals:0,cometMatter:0,
-blackHoles:0,coresConsumed:0};
+blackHoles:0,coresConsumed:0,impulseBurns:0};
+const SPECIALIZATIONS={
+  impulse:{id:'impulse',name:'IMPULSE BURN'}
+};
+let runSpecialization={
+  ready:false,
+  selected:null,
+  cooldown:0,
+  readyNotified:false
+};
 let clutchState={
   globalUntil:0,
   lastPriority:0,
@@ -1831,6 +1915,9 @@ function fxLaunch(s){
   if(!s?.isPlayer)return;
   synthSweep('launch',360,210,.055,.030,'triangle',.055)
 }
+function fxImpulse(){
+  synthSweep('impulse',235,72,.12,.050,'sawtooth',.12)
+}
 function fxImpact(x,y,heavy=false){
   if(!audibleAt(x,y,560))return;
   synthSweep(
@@ -1942,7 +2029,8 @@ function freshRunStats(){
     steals:0,
     cometMatter:0,
     blackHoles:0,
-    coresConsumed:0
+    coresConsumed:0,
+    impulseBurns:0
   }
 }
 function formatRunTime(sec){
@@ -2197,6 +2285,7 @@ function runSummaryHTML(best){
     <div class="runMeta">
       Comet maddesi <b>${r.cometMatter}</b> ·
       Black Hole <b>×${r.blackHoles}</b> ·
+      Impulse <b>×${r.impulseBurns||0}</b> ·
       Yutulan çekirdek <b>${r.coresConsumed}</b> ·
       En iyi skor <b>${best}</b>
     </div>
@@ -2598,7 +2687,7 @@ function drawCometOnMinimap(){
   MX.restore()
 }
 
-function reset(){stopBlackHoleHum();runStats=freshRunStats();beginPersonalBestRun();resetClutchFeedback();resetWorldEvent(true);systems=[];motes=[];shots=[];parts=[];asteroids=[];asteroidBelts=[];score=0;collisionAcc=0;fpsSmoothed=60;leaderTimer=0;leaderId=null;leaderCache=[];miniTimer=0;ambientSpawnBudget=0;player=system(WW/2,WH/2,true,0);for(let i=0;i<8;i++)addOrb(player);systems.push(player);
+function reset(){stopBlackHoleHum();runStats=freshRunStats();beginPersonalBestRun();resetClutchFeedback();resetRunSpecialization();resetWorldEvent(true);systems=[];motes=[];shots=[];parts=[];asteroids=[];asteroidBelts=[];score=0;collisionAcc=0;fpsSmoothed=60;leaderTimer=0;leaderId=null;leaderCache=[];miniTimer=0;ambientSpawnBudget=0;player=system(WW/2,WH/2,true,0);for(let i=0;i<8;i++)addOrb(player);systems.push(player);
 for(let i=1;i<=BOTS;i++){let b=system(rand(250,WW-250),rand(220,WH-220),false,i);for(let j=0;j<Math.floor(rand(8,24));j++)addOrb(b);b.scale=rand(.82,1.28);systems.push(b)}
 for(let i=0;i<MOTES;i++)spawnAmbientMote(false);
 buildAsteroidBelts();
@@ -2751,6 +2840,169 @@ function trackEnemyNearMiss(sh,prevX,prevY){
   ){
     emitClutch('NEAR MISS','nearMiss',4,2)
   }
+}
+function resetRunSpecialization(){
+  runSpecialization={
+    ready:false,
+    selected:null,
+    cooldown:0,
+    readyNotified:false
+  }
+}
+function updateRunSpecialization(dt){
+  runSpecialization.cooldown=Math.max(0,runSpecialization.cooldown-dt);
+
+  if(
+    !runSpecialization.ready &&
+    !runSpecialization.selected &&
+    player &&
+    mass(player)>=SPECIALIZATION_MASS
+  ){
+    runSpecialization.ready=true;
+
+    if(!runSpecialization.readyNotified){
+      runSpecialization.readyNotified=true;
+      toast(
+        touchCapable
+          ?'UZMANLAŞMA HAZIR · IMPULSE DÜĞMESİ'
+          :'UZMANLAŞMA HAZIR · SPACE: IMPULSE',
+        4,1400
+      )
+    }
+  }
+}
+function chooseSpecialization(id){
+  if(
+    !running||!player||runSpecialization.selected||
+    !runSpecialization.ready||player.blackHole||player.rebirth||
+    player.collapseCharge>0
+  )return false;
+
+  const spec=SPECIALIZATIONS[id];
+  if(!spec)return false;
+
+  runSpecialization.selected=id;
+  runSpecialization.cooldown=0;
+  toast(spec.name+' SEÇİLDİ · RUN BOYUNCA KİLİTLİ',4,1400);
+  return true
+}
+function specializationDirection(){
+  if(!player)return{x:0,y:0};
+
+  let dx=0,dy=0;
+
+  if(touchCapable&&mobileInput.moveActive){
+    dx=mobileInput.moveX;
+    dy=mobileInput.moveY
+  }else{
+    dx=(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0);
+    dy=(K.KeyS||K.ArrowDown?1:0)-(K.KeyW||K.ArrowUp?1:0)
+  }
+
+  let d=Math.hypot(dx,dy);
+  if(d>.08)return{x:dx/d,y:dy/d};
+
+  d=Math.hypot(player.vx,player.vy);
+  if(d>24)return{x:player.vx/d,y:player.vy/d};
+
+  const a=aim();
+  dx=a.x-player.x;
+  dy=a.y-player.y;
+  d=Math.hypot(dx,dy);
+
+  return d>.001?{x:dx/d,y:dy/d}:{x:1,y:0}
+}
+function impulseBurnOrb(dir){
+  if(!player||!player.orbs.length)return null;
+
+  const target=Math.atan2(-dir.y,-dir.x);
+  let maxBase=0;
+
+  for(const o of player.orbs){
+    if(!o.unstable)maxBase=Math.max(maxBase,o.base||0)
+  }
+
+  let best=null,bestScore=Infinity;
+
+  for(const o of player.orbs){
+    if(o.unstable)continue;
+
+    const diff=Math.abs(
+      Math.atan2(
+        Math.sin(o.theta-target),
+        Math.cos(o.theta-target)
+      )
+    );
+    const outerPenalty=maxBase>0
+      ?Math.max(0,maxBase-(o.base||0))/MAX_ORBIT_RADIUS*.35
+      :0;
+    const score=diff+outerPenalty;
+
+    if(score<bestScore){
+      best=o;
+      bestScore=score
+    }
+  }
+
+  return best
+}
+function useImpulseBurn(){
+  if(
+    !running||!player||
+    runSpecialization.selected!=='impulse'||
+    runSpecialization.cooldown>0||
+    player.blackHole||player.rebirth||player.collapseCharge>0
+  )return false;
+
+  const dir=specializationDirection();
+  const orb=impulseBurnOrb(dir);
+  if(!orb)return false;
+
+  const idx=player.orbs.indexOf(orb);
+  if(idx<0)return false;
+
+  const p=op(player,orb);
+  player.orbs.splice(idx,1);
+
+  const fragment=spawnM(
+    p.x,p.y,
+    player.vx-dir.x*IMPULSE_EJECT_SPEED,
+    player.vy-dir.y*IMPULSE_EJECT_SPEED,
+    orb.size,orb.weight||1,orb.kind||'mote',
+    player.id,true,player.accent
+  );
+
+  if(fragment){
+    fragment.escapeTime=2.0;
+    fragment.escapeOwnerId=player.id;
+    fragment.escapeOriginX=p.x;
+    fragment.escapeOriginY=p.y;
+    fragment.escapeExtensions=0
+  }
+
+  player.vx+=dir.x*IMPULSE_THRUST;
+  player.vy+=dir.y*IMPULSE_THRUST;
+
+  runSpecialization.cooldown=IMPULSE_COOLDOWN;
+  runStats.impulseBurns=(runStats.impulseBurns||0)+1;
+
+  burst(p.x,p.y,player.accent,10);
+  fxImpulse();
+  toast('IMPULSE BURN · 1 UYDU AYRILDI',4,900);
+  return true
+}
+function handleSpecializationInput(){
+  if(!running||!player)return false;
+
+  if(!runSpecialization.selected){
+    return chooseSpecialization('impulse')
+  }
+
+  if(runSpecialization.selected==='impulse'){
+    return useImpulseBurn()
+  }
+
+  return false
 }
 function aim(){return{x:cam.x+M.x/cam.zoom,y:cam.y+M.y/cam.zoom}}
 function findAimOrb(s,ang){let bi=-1,bd=9;for(let i=0;i<s.orbs.length;i++){let d=Math.abs(Math.atan2(Math.sin(s.orbs[i].theta-ang),Math.cos(s.orbs[i].theta-ang)));if(d<bd){bd=d;bi=i}}return bi}
@@ -4784,6 +5036,16 @@ $('score').textContent=score;
 $('gravity').textContent=Math.round(grav(player));
 $('speed').textContent=Math.round(move(player));
 $('integrity').textContent=player.collapses===0?'♥♥':'♥♡';
+const skillState=$('skillState');
+if(skillState){
+  if(!runSpecialization.selected){
+    skillState.textContent=runSpecialization.ready?'SPACE':'18+'
+  }else if(runSpecialization.cooldown>0){
+    skillState.textContent='IMP '+runSpecialization.cooldown.toFixed(1)
+  }else{
+    skillState.textContent='IMP'
+  }
+}
 $('stability').textContent=player.blackHole?Math.round(player.bhStability)+'/'+Math.round(player.bhMaxStability):'—';
 $('reserve').textContent=player.blackHole?Math.floor(player.bhReserve):0;
 $('loose').textContent=motes.length;
@@ -4855,6 +5117,7 @@ function update(dt){
   }
   updateRebuild(dt);
   updateParts(dt);
+  updateRunSpecialization(dt);
   camera(dt);
   hud();
   updateMobileControls();
@@ -5346,7 +5609,7 @@ const o=$('overlay');
 o.style.display='flex';
 o.innerHTML=`
   <div class="card">
-    <h1>Orbit<span>.io</span> V3.17.1</h1>
+    <h1>Orbit<span>.io</span> V3.17.2</h1>
     <p>
       Çekirdek bütünlüğün tamamen tükendi.
       Bu koşuyu <b>${score} skor</b> ile tamamladın.
